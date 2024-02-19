@@ -1,4 +1,13 @@
-## Accepted at ICCV 2021 !!
+Important: This repository is based on https://github.com/gordonjun2/Naturalistic-Adversarial-Patch, adapted to work with Python 3.8 and CUDA 12.2.
+Some changes include:
+- Support to Python 3.8
+- Linalg pytorch library changes
+- Remove pretrained from model loads
+- Multithreading bugs fixes in windows
+- FasterrcnnResnet50 is now invoked correctly
+- Updated pytorch and torchvision
+- Fixed relative paths of weights folders
+- Future: Support YOLOv8
 
 ## Naturalistic Physical Adversarial Patch for Object Detectors 
 
