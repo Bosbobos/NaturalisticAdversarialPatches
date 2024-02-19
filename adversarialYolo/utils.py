@@ -394,7 +394,7 @@ def do_detect(model, img, conf_thresh, nms_thresh, use_cuda=1):
 def read_data_cfg(datacfg):
     options = dict()
     options['gpus'] = '0,1,2,3'
-    options['num_workers'] = '10'
+    options['num_workers'] = '6'
     with open(datacfg, 'r') as fp:
         lines = fp.readlines()
 

@@ -182,7 +182,7 @@ class PatchTrainer(object):
                                                                 shuffle=True),
                                                    batch_size=batch_size,
                                                    shuffle=True,
-                                                   num_workers=10)
+                                                   num_workers=6)
         self.epoch_length = len(train_loader)
         print(f'One epoch is {len(train_loader)}')
 

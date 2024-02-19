@@ -17,7 +17,7 @@ def torch_expm(A):
     U, V = torch_pade13(A_scaled)
     P = U + V
     Q = -U + V
-    R, _ = torch.solve(P, Q)
+    R = torch.linalg.solve(Q, P) # `torch.linalg.solve` has its arguments reversed and does not return the LU factorization.
 
     # Unsquaring step
     res = [R]
