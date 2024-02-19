@@ -164,7 +164,7 @@ while(True):
             labels         = labels[:, 0:5] # without conf_obj
     if(len(labels) > 0):
         labels_tensor = plt2tensor(labels).to(device)
-        p_img_batch, fake_images_denorm  = eval_rowPtach(generator=None, batch_size=batch_size, device=device
+        p_img_batch, fake_images_denorm , bboxes = eval_rowPtach(generator=None, batch_size=batch_size, device=device
                                             , latent_shift=None, alpah_latent = None
                                             , input_imgs=imm_tensor, label=labels_tensor, patch_scale=patch_scale, cls_id_attacked=cls_id_attacked
                                             , denormalisation = False
@@ -198,5 +198,5 @@ while(True):
     cv2.waitKey(1)
     # if cv2.waitKey(1) & 0xFF == ord('q'): break
 
-cv2.release()
+cap.release()
 cv2.destroyAllWindows()
