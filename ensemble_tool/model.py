@@ -119,7 +119,7 @@ def eval_rowPtach(generator, batch_size, device
             loss_det = torch.mean(max_prob_obj_cls)
             # loss_overlap
             loss_overlap = -torch.mean(overlap_score)
-        if(model_name == "yolov3"):
+        elif(model_name == "yolov3"):
             max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
             # loss_det
             if multi_score:
@@ -129,7 +129,7 @@ def eval_rowPtach(generator, batch_size, device
                 loss_det = torch.mean(max_prob_obj_cls)
             # loss_overlap
             loss_overlap = -torch.mean(overlap_score)
-        if(model_name == "yolov2"):
+        elif(model_name == "yolov2"):
             max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
             # loss_det
             if multi_score:
@@ -139,13 +139,24 @@ def eval_rowPtach(generator, batch_size, device
                 loss_det = torch.mean(max_prob_obj_cls)
             # loss_overlap
             loss_overlap = -torch.mean(overlap_score)
-        if(model_name == "fasterrcnn"):
+        elif(model_name == "fasterrcnn"):
             max_prob, bboxes = detector.detect(tensor_image_inputs=p_img_batch, cls_id_attacked=cls_id_attacked, threshold=0.5)
             # loss_det
             loss_det = torch.mean(max_prob)
             # no loss_overlap
             loss_overlap = torch.tensor(0.0).to(device)
-        
+        elif model_name == "yolov8":
+            bboxes = detector(p_img_batch)
+            combined_probs = []
+            for box in bboxes[0].boxes:
+                obj_prob = box.conf.cpu()
+                if box.cls.cpu().item() == cls_id_attacked:
+                        combined_probs.append(obj_prob)
+            if combined_probs:
+                    loss_det = torch.mean(torch.stack(combined_probs))
+            else:
+                loss_det = torch.tensor(0.0).to(device)
+
         if(min_loss_det > loss_det):
             min_loss_det = loss_det
     
@@ -163,12 +174,20 @@ def eval_rowPtach(generator, batch_size, device
             class_names = load_class_names(namesfile)
             # sample first image
             # print("bbox : "+str(bbox))
-            bbox = bboxes[b]
+            if model_name == "yolov8":
+                bbox = bboxes[b].boxes
+            else:
+                bbox = bboxes[b]
             for box in bbox:
                 # print("box size : "+str(box.size()))
-                cls_id = box[6].int()
-                cls_name = class_names[cls_id]
-                cls_conf = box[5]
+                if model_name == "yolov8":
+                    cls_id = box.cls.int()
+                    cls_name = class_names[cls_id]
+                    cls_conf = box.conf
+                else:
+                    cls_id = box[6].int()
+                    cls_name = class_names[cls_id]
+                    cls_conf = box[5]
                 if(cls_id == cls_id_attacked):
                     if(cls_conf > cls_conf_threshold):
                         if(model_name == "yolov2"):
@@ -180,11 +199,20 @@ def eval_rowPtach(generator, batch_size, device
                             right       = (x_center.item() + width.item() / 2) * img_width
                             top         = (y_center.item() - height.item() / 2) * img_height
                             bottom      = (y_center.item() + height.item() / 2) * img_height
-                        if(model_name == "yolov4") or (model_name == "yolov3") or (model_name == "fasterrcnn"):
+                        elif(model_name == "yolov4") or (model_name == "yolov3") or (model_name == "fasterrcnn"):
                             left        = int(box[0] * img_width)
                             right       = int(box[2] * img_width)
                             top         = int(box[1] * img_height)
                             bottom      = int(box[3] * img_height)
+                        elif model_name == "yolov8":
+                            left, top, right, bottom = (
+                                int(box.xyxy[0][0].cpu().item()),
+                                int(box.xyxy[0][1].cpu().item()),
+                                int(box.xyxy[0][2].cpu().item()),
+                                int(box.xyxy[0][3].cpu().item()),
+                            )
+                        else:
+                            raise Exception("Model not implemented")
                         # img with prediction
                         draw = ImageDraw.Draw(img_pil)
                         shape = [left, top, right, bottom]

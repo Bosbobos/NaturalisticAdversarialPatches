@@ -197,12 +197,14 @@ while(True):
 
         labels = np.array(labels)
         labels_rescale = np.array(labels_rescale)
+    else:
+        raise Exception("Model not implemented")
         
-    # !!!!!!!!!!
-    print(f"Labels: {labels}")
-    print(f"Labels rescale: {labels_rescale}")
-    exit(0)
-    # !!!!!!!!!!
+    # # !!!!!!!!!!
+    # print(f"Labels: {labels}")
+    # print(f"Labels rescale: {labels_rescale}")
+    # exit(0)
+    # # !!!!!!!!!!
         
     # Take only the top 14 largest of objectness_conf (max_labels_per_img)
     if(labels.shape[0]>0):
