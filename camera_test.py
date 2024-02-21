@@ -27,8 +27,11 @@ from pytorchYOLOv4.demo import DetectorYolov4
 from adversarialYolo.demo import DetectorYolov2
 from adversarialYolo.load_data import InriaDataset, PatchTransformer, PatchApplier
 
+from ultralytics import YOLO
+
 ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
-model_name            = "yolov4"    # yolov4, yolov3, yolov2
+# model_name            = "yolov4"    # yolov4, yolov3, yolov2
+model_name = "yolov8"
 yolo_tiny             = True        # only yolov4, yolov3
 
 ##############################################
@@ -99,6 +102,9 @@ if(model_name == "yolov3"):
 if(model_name == "yolov4"):
     detectorYolov4   = DetectorYolov4(show_detail=False, tiny=yolo_tiny)
     detector = detectorYolov4
+if(model_name == "yolov8"):
+    detectorYolov8 = YOLO("yolov8n.pt")
+    detector = detectorYolov8
 
 
 ### -----------------------------------------------------------     Camera     ---------------------------------------------------------------------- ###
@@ -121,12 +127,21 @@ while(True):
     img_side   = imm_tensor.size()[-1]
     img_output = imm_tensor
     # print("imm_tensor size : "+str(imm_tensor.size()))
+    
+    
     # detect image
-    max_prob_obj, max_prob_cls, bboxes = detector.detect(input_imgs=imm_tensor, cls_id_attacked=cls_id_attacked, with_bbox=True) # Be always with bbox
+    if model_name == "yolov8":
+        bboxes = detector(imm_tensor)
+    else:
+        _, _, bboxes = detector.detect(input_imgs=imm_tensor, cls_id_attacked=cls_id_attacked, with_bbox=True) # Be always with bbox
+    
     # add patch
+    # not implemented in camera test
+    
+    
     # get bbox label.
     labels = []          # format:  (label, x_center, y_center, w, h)  ex:(0 0.5 0.6 0.07 0.22)
-    labels_rescale = []  # format:  (label, confendence, left, top, right, bottom)  ex:(person 0.76 0.6 183.1 113.5 240.3 184.7)
+    labels_rescale = []  # format:  (label, confidence, left, top, right, bottom)  ex:(person 0.76 0.6 183.1 113.5 240.3 184.7)
     if(len(bboxes) == batch_size):
         ## ONLY batch_size = 1
         bbox = bboxes[0]
@@ -150,6 +165,47 @@ while(True):
                 labels_rescale.append(label_rescale)
         labels = np.array(labels)
         labels_rescale = np.array(labels_rescale)
+        
+    elif(model_name == "yolov8"):
+        for b in bbox.boxes:
+            detected_class = int(b.cls.cpu().item())
+            orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
+            if detected_class == int(cls_id_attacked):
+                conf = b.conf.cpu().item()
+                # For labels: using xywh format
+                x_center, y_center, w, h = (
+                    b.xywh[0][0].cpu().item() / orig_width,
+                    b.xywh[0][1].cpu().item() / orig_height,
+                    b.xywh[0][2].cpu().item() / orig_width,
+                    b.xywh[0][3].cpu().item() / orig_height,
+                )
+                label = np.array(
+                    [detected_class, x_center, y_center, w, h, conf], dtype=np.float32
+                )
+                labels.append(label)
+                # For labels_rescale: using xyxy format
+                left, top, right, bottom = (
+                    b.xyxy[0][0].cpu().item(),
+                    b.xyxy[0][1].cpu().item(),
+                    b.xyxy[0][2].cpu().item(),
+                    b.xyxy[0][3].cpu().item(),
+                )
+                label_rescale = np.array(
+                    [detected_class, conf, left, top, right, bottom], dtype=np.float32
+                )
+                labels_rescale.append(label_rescale)
+
+        labels = np.array(labels)
+        labels_rescale = np.array(labels_rescale)
+    else:
+        raise Exception("Model not implemented")
+        
+    # # !!!!!!!!!!
+    # print(f"Labels: {labels}")
+    # print(f"Labels rescale: {labels_rescale}")
+    # exit(0)
+    # # !!!!!!!!!!
+        
     # Take only the top 14 largest of objectness_conf (max_labels_per_img)
     if(labels.shape[0]>0):
         num_bbox, _ = labels.shape
