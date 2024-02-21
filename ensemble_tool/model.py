@@ -151,7 +151,7 @@ def eval_rowPtach(generator, batch_size, device
     
     loss_det = min_loss_det
 
-    # darw bbox
+    # draw bbox
     if enable_with_bbox and len(bboxes)>0:
         trans_2pilimage = transforms.ToPILImage()
         batch = p_img_batch.size()[0]
