@@ -7,6 +7,7 @@ Some changes include:
 - FasterrcnnResnet50 is now invoked correctly
 - Updated pytorch and torchvision
 - Fixed relative paths of weights folders
+- Fixes the camera test by making eval return bboxes
 - Future: Support YOLOv8
 
 ## Naturalistic Physical Adversarial Patch for Object Detectors 
@@ -21,7 +22,7 @@ Aiiu-lab @ Academia Sinica
 <img src="./patch/teaser.jpg" width="50%" title="" alt="teaser"></img>
 
 ### Abstract
-Most prior works on physical adversarial attacks mainly focus on the attack performance but seldom enforce any restrictions over the appearance of the generated adversarial patches. This leads to conspicuous and attention-grabbing patterns for the generated patches which can be easily identified by humans. To address this issue, we propose a method to craft physical adversarial patches for object detectors by leveraging the learned image manifold of a pretrained generative adversarial network (GAN) (e.g., BigGAN and StyleGAN) upon real-world images. Through sampling the optimal image from the GAN, our method can generate natural looking adversarial patches while maintaining high attack performance. With extensive experiments on both digital and physical domains and several independent subjective surveys, the results show that our proposed method produces significantly more realistic and natural looking patches than several state-of-the-art baselines while achieving competitive attack performance.
+Most prior works on physical adversarial attacks mainly focus on the attack performance but seldom enforce any restrictions over the appearance of the generated adversarial patches. This leads to conspicuous and attention-grabbing patterns for the generated patches which can be easily identified by humans. To address this issue, we propose a method to craft physical adversarial patches for object detectors by leveraging the learned image manifold of a pretrained generative adversarial network (GAN) (e.g., BigGAN and StyleGAN) upon real-world images. Through sampling the optimal image from the GAN, our method can generate natural-looking adversarial patches while maintaining high attack performance. With extensive experiments on both digital and physical domains and several independent subjective surveys, the results show that our proposed method produces significantly more realistic and natural-looking patches than several state-of-the-art baselines while achieving competitive attack performance.
 
 
 ## News
@@ -34,7 +35,7 @@ Clone the code:
 git clone https://github.com/aiiu-lab/Naturalistic-Adversarial-Patch
 cd Naturalistic-Adversarial-Patch
 ```
-Build the environment and install PyTorch and Torchvision as following [official PyTorch instruction](https://pytorch.org/get-started/locally/)
+Build the environment and install PyTorch and Torchvision following the [official](https://pytorch.org/get-started/locally/)[ PyTorch instruction](https://pytorch.org/get-started/locally/)](https://pytorch.org/get-started/locally/)
 ```bash
 conda create -n advpatch python=3.7
 conda activate advpatch
@@ -46,7 +47,7 @@ Install other packages using the following command:
 pip install -r requirements.txt
 ```
 ### Dataset
-Download the INRIA dataset using following command:
+Download the INRIA dataset using the following command:
 ```bash
 bash download_inria.sh
 ```
@@ -105,16 +106,16 @@ CUDA_VISIBLE_DEVICES=0 python ensemble.py --model=yolov4 --tiny
 - `--tiny`: only works for YOLOv3 and YOLOv4. To use TOLOv4tiny, enable this argument.
 - `--classBiggan`: the class of generated patch. You can choose from 0 to 999 (ImageNet pretrained). 
 
-The result (i.e, adversarial patch) will be saved at exp/exp{experiemnt id} automatically.
+The result (i.e., adversarial patch) will be saved at exp/exp{experiemnt id} automatically.
 You can use tensorboard to check the training history: 
 ```bash
 tensorboard --logdir=./exp 
 ```
 
 ## Credits
-- BigGAN code and weights are base on: [GANLatentDiscovery](https://github.com/anvoynov/GANLatentDiscovery)
+- BigGAN code and weights are based on: [GANLatentDiscovery](https://github.com/anvoynov/GANLatentDiscovery)
 
-- StyleGAN2 code and wieghts are based on: [stylegan2](https://github.com/NVlabs/stylegan2)
+- StyleGAN2 code and weights are based on: [stylegan2](https://github.com/NVlabs/stylegan2)
 
 - YOLOv2 and adversarial patch codes are based on: [adversarial-yolo](https://gitlab.com/EAVISE/adversarial-yolo)
 
