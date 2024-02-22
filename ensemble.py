@@ -15,6 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 import time
 from tqdm import tqdm
 from torch import autograd
+from ultralytics import YOLO
 from ensemble_tool.utils import *
 from ensemble_tool.model import train_rowPtach, TotalVariation
 import random
@@ -51,8 +52,8 @@ def main():
     ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
     Gparser = argparse.ArgumentParser(description='Advpatch Training')
     Gparser.add_argument('--seed', default='15089',type=int, help='choose seed') 
-    Gparser.add_argument('--model', default='yolov4', type=str, help='options : yolov2, yolov3, yolov4, fasterrcnn')
-    Gparser.add_argument('--classBiggan', default=259, type=int, help='class in big gan') # 84:peacock, 294:brownbear
+    Gparser.add_argument('--model', default='yolov8', type=str, help='options : yolov2, yolov3, yolov4, yolov8 fasterrcnn')
+    Gparser.add_argument('--classBiggan', default=84, type=int, help='class in big gan') # 84:peacock, 294:brownbear
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     apt = Gparser.parse_known_args()[0]
     print(apt)
@@ -142,6 +143,8 @@ def main():
     if(model_name == "yolov3" or model_name == "yolov4"):
         if(yolo_tiny):
             label_folder_name = label_folder_name + 'tiny'
+    if model_name == "yolov8":
+        label_folder_name = 'yolo-labels_yolov4' # TODO: Relabel the dataset for YOLOv8?
 
 
     # load the pre-trained from GANLatentDiscovery
@@ -250,6 +253,11 @@ def main():
         learing_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second=1
+    if(model_name == "yolov8"):
+        detectorYolov8 = YOLO("yolov8n.pt")
+        detector = detectorYolov8
+        batch_size_second      = 16
+        learing_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
         batch_size_second = 8

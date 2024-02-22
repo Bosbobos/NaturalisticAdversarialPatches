@@ -16,6 +16,8 @@ from GANLatentDiscovery.torch_tools.visualization import to_image
 from GANLatentDiscovery.visualization import interpolate, interpolate_shift
 from ipdb import set_trace as st
 
+from pytorch_pretrained_detection import FasterrcnnResnet50
+
 
 class TotalVariation(nn.Module):
     """TotalVariation: calculates the total variation of a patch.
@@ -146,7 +148,7 @@ def eval_rowPtach(generator, batch_size, device
             # no loss_overlap
             loss_overlap = torch.tensor(0.0).to(device)
         elif model_name == "yolov8":
-            bboxes = detector(p_img_batch)
+            bboxes = detector(p_img_batch, verbose=False)
             combined_probs = []
             for box in bboxes[0].boxes:
                 obj_prob = box.conf.cpu()
@@ -156,6 +158,8 @@ def eval_rowPtach(generator, batch_size, device
                     loss_det = torch.mean(torch.stack(combined_probs))
             else:
                 loss_det = torch.tensor(0.0).to(device)
+        else:
+            raise Exception("Model not implemented")
 
         if(min_loss_det > loss_det):
             min_loss_det = loss_det
@@ -347,7 +351,7 @@ def train_rowPtach(method_num, generator
                 loss_det = torch.mean(max_prob_obj_cls)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
-            if(model_name == "yolov3"):
+            elif(model_name == "yolov3"):
                 max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
                 # loss_det
                 if multi_score:
@@ -357,7 +361,7 @@ def train_rowPtach(method_num, generator
                     loss_det = torch.mean(max_prob_obj_cls)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
-            if(model_name == "yolov2"):
+            elif(model_name == "yolov2"):
                 max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
                 # loss_det
                 if multi_score:
@@ -366,12 +370,28 @@ def train_rowPtach(method_num, generator
                     loss_det = torch.mean(max_prob_obj_cls)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
-            if(model_name == "fasterrcnn"):
+            elif(model_name == "fasterrcnn"):
                 max_prob, bboxes = detector.detect(tensor_image_inputs=p_img_batch, cls_id_attacked=cls_id_attacked, threshold=0.5)
                 # loss_det
                 loss_det = torch.mean(max_prob)
                 # no loss_overlap
                 loss_overlap = torch.tensor(0.0).to(device)
+            elif model_name == "yolov8":
+                bboxes = detector(p_img_batch, verbose=False)
+                combined_probs = []
+                for box in bboxes[0].boxes:
+                    obj_prob = box.conf.cpu()
+                    if box.cls.cpu().item() == cls_id_attacked:
+                            combined_probs.append(obj_prob)
+                if combined_probs:
+                        loss_det = torch.mean(torch.stack(combined_probs))
+                else:
+                    loss_det = torch.tensor(0.0).to(device)
+                # no loss_overlap # TODO: Check what is this (?)
+                loss_overlap = torch.tensor(0.0).to(device)
+                
+            else:
+                raise Exception("Model not implemented")
 
             if(min_loss_det > loss_det):
                 min_loss_det = loss_det
@@ -417,11 +437,20 @@ def train_rowPtach(method_num, generator
                             right       = (x_center.item() + width.item() / 2) * img_width
                             top         = (y_center.item() - height.item() / 2) * img_height
                             bottom      = (y_center.item() + height.item() / 2) * img_height
-                        if(model_name == "yolov4") or (model_name == "yolov3" or (model_name == "fasterrcnn")):
+                        elif(model_name == "yolov4") or (model_name == "yolov3" or (model_name == "fasterrcnn")):
                             left        = int(box[0] * img_width)
                             right       = int(box[2] * img_width)
                             top         = int(box[1] * img_height)
                             bottom      = int(box[3] * img_height)
+                        elif model_name == "yolov8":
+                            left, top, right, bottom = (
+                                int(box.xyxy[0][0].cpu().item()),
+                                int(box.xyxy[0][1].cpu().item()),
+                                int(box.xyxy[0][2].cpu().item()),
+                                int(box.xyxy[0][3].cpu().item()),
+                            )
+                        else:
+                            raise Exception("Model not implemented")
                         # img with prediction
                         draw = ImageDraw.Draw(img_pil)
                         shape = [left, top, right, bottom]
@@ -507,7 +536,7 @@ def train_rowPtach(method_num, generator
                     loss_det = torch.mean(max_prob_obj)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
-            if(model_name == "yolov2"):
+            elif(model_name == "yolov2"):
                 max_prob_obj, max_prob_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
                 # loss_det
                 if multi_score:
@@ -517,8 +546,23 @@ def train_rowPtach(method_num, generator
                     loss_det = torch.mean(max_prob_obj)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
+            elif model_name == "yolov8":
+                bboxes = detector(p_img_batch, verbose=False)
+                combined_probs = []
+                for box in bboxes[0].boxes:
+                    obj_prob = box.conf.cpu()
+                    if box.cls.cpu().item() == cls_id_attacked:
+                            combined_probs.append(obj_prob)
+                if combined_probs:
+                        loss_det = torch.mean(torch.stack(combined_probs))
+                else:
+                    loss_det = torch.tensor(0.0).to(device)
+                # no loss_overlap # TODO: Check what is this (?)
+                loss_overlap = torch.tensor(0.0).to(device)
+            else:
+                raise Exception("Model not implemented")
             if(model_name == "fasterrcnn"):
-                max_prob, max_prob, bboxes = fasterrcnn(tensor_image_inputs=p_img_batch, device=device, cls_id_attacked=cls_id_attacked, threshold=0.5)
+                max_prob, max_prob, bboxes = FasterrcnnResnet50(tensor_image_inputs=p_img_batch, device=device, cls_id_attacked=cls_id_attacked, threshold=0.5)
                 # loss_det
                 loss_det = torch.mean(max_prob)
                 # no loss_overlap
