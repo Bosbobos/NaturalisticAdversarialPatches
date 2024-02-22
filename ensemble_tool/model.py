@@ -384,7 +384,7 @@ def train_rowPtach(method_num, generator
                     if box.cls.cpu().item() == cls_id_attacked:
                             combined_probs.append(obj_prob)
                 if combined_probs:
-                        loss_det = torch.mean(torch.stack(combined_probs))
+                        loss_det = torch.mean(torch.stack(combined_probs)).to(device)
                 else:
                     loss_det = torch.tensor(0.0).to(device)
                 # no loss_overlap # TODO: Check what is this (?)
@@ -554,7 +554,7 @@ def train_rowPtach(method_num, generator
                     if box.cls.cpu().item() == cls_id_attacked:
                             combined_probs.append(obj_prob)
                 if combined_probs:
-                        loss_det = torch.mean(torch.stack(combined_probs))
+                        loss_det = torch.mean(torch.stack(combined_probs)).to(device)
                 else:
                     loss_det = torch.tensor(0.0).to(device)
                 # no loss_overlap # TODO: Check what is this (?)

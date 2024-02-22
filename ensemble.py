@@ -52,8 +52,8 @@ def main():
     ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
     Gparser = argparse.ArgumentParser(description='Advpatch Training')
     Gparser.add_argument('--seed', default='15089',type=int, help='choose seed') 
-    Gparser.add_argument('--model', default='yolov8', type=str, help='options : yolov2, yolov3, yolov4, yolov8 fasterrcnn')
-    Gparser.add_argument('--classBiggan', default=84, type=int, help='class in big gan') # 84:peacock, 294:brownbear
+    Gparser.add_argument('--model', default='yolov4', type=str, help='options : yolov2, yolov3, yolov4, yolov8 fasterrcnn')
+    Gparser.add_argument('--classBiggan', default=294, type=int, help='class in big gan') # 84:peacock, 294:brownbear
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     apt = Gparser.parse_known_args()[0]
     print(apt)
@@ -80,7 +80,7 @@ def main():
     enable_clear_output   = False     # True: training data without any patch
     multi_score           = True     # True: detection score is "class score * objectness score" for yolo.  /  False: detection score is only "objectness score" for yolo.
     # loss weight
-    weight_loss_tv        = 0.1       # total variation loss rate    ([0-0.1])
+    weight_loss_tv        = 0.0       # total variation loss rate    ([0-0.1])
     weight_loss_overlap   = 0.0       # total bbox overlap loss rate ([0-0.1])
     # training setting
     retrain_gan           = False     # whether use pre-trained checkpoint 
@@ -90,11 +90,11 @@ def main():
     n_epochs              = 15      # training total epoch
 
     start_epoch           = 1         # from what epoch to start training
-    learing_rate          = 0.02      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
+    learning_rate         = 0.02      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
     epoch_save            = 10001       # from how many A to save a checkpoint
     cls_id_attacked       = 0         # the class attacked. (0: person). List: https://gist.github.com/AruniRC/7b3dadd004da04c80198557db5da4bda
     cls_id_generation     = apt.classBiggan       # the class generated at patch. (259: pomeranian) List: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
-    alpha_latent          = 1.0       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
+    alpha_latent          = 0.99       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
     rowPatch_size         = 128       # the size of patch without gan. It's just like "https://openaccess.thecvf.com/content_CVPRW_2019/html/CV-COPS/Thys_Fooling_Automated_Surveillance_Cameras_Adversarial_Patches_to_Attack_Person_Detection_CVPRW_2019_paper.html"
     method_num            = 2         # options : 0 (rowPatch without GAN. randon) / 2 (BigGAN) / 3 (styleGAN2)
     # parameters of BigGAN
@@ -172,6 +172,11 @@ def main():
             len_latent = G.dim_z
         print("setting: len_latent : "+str(len_latent))
         print()
+        
+        # BigGAN input.     input = ((1-alpha) * fixed) + (alpha * delta)
+        fixed_latent_biggan = torch.rand(len_z, device=device)                                                                   # the fixed
+        # latent_shift_biggan = torch.rand(len_latent, device=device).requires_grad_(True) 
+        latent_shift_biggan = torch.normal(0.0, torch.ones(len_latent)).to(device).requires_grad_(True)                                        # the delta
     elif method_num ==3:
         stylegan_G = run_generator.get_style_gan2()
         len_z = stylegan_G.latent_size
@@ -179,16 +184,10 @@ def main():
         len_latent = len_z
         print("setting: len_latent : "+str(len_latent))
         print()
-    else:
-        raise Exception("Only BigGAN and styleGAN you can choose")
 
 
     # rowPatch.         input = delta
     rowPatch            = torch.rand((3, rowPatch_size, rowPatch_size), device=device).requires_grad_(True)                  # the delta
-    # BigGAN input.     input = ((1-alpha) * fixed) + (alpha * delta)
-    fixed_latent_biggan = torch.rand(len_z, device=device)                                                                   # the fixed
-    # latent_shift_biggan = torch.rand(len_latent, device=device).requires_grad_(True) 
-    latent_shift_biggan = torch.normal(0.0, torch.ones(len_latent)).to(device).requires_grad_(True)                                        # the delta
 
     if(enable_init_latent_vectors):
         # load z_approx (1, 120)
@@ -236,28 +235,28 @@ def main():
         detectorYolov2 = DetectorYolov2(show_detail=False)
         detector = detectorYolov2
         batch_size_second      = 8
-        learing_rate          = 0.005
+        learning_rate          = 0.005
         # # ORIGIN
         # detector = PatchTrainer("paper_obj")
     if(model_name == "yolov3"):
         detectorYolov3 = DetectorYolov3(show_detail=False, tiny=yolo_tiny)
         detector = detectorYolov3
         batch_size_second      = 16
-        learing_rate          = 0.005
+        learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second  = 4
     if(model_name == "yolov4"):
         detectorYolov4   = DetectorYolov4(show_detail=False, tiny=yolo_tiny)
         detector = detectorYolov4
         batch_size_second      = 16
-        learing_rate          = 0.005
+        learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second=1
     if(model_name == "yolov8"):
         detectorYolov8 = YOLO("yolov8n.pt")
         detector = detectorYolov8
-        batch_size_second      = 16
-        learing_rate          = 0.005
+        batch_size_second      = 32
+        learning_rate          = 0.02
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
         batch_size_second = 8
@@ -314,9 +313,9 @@ def main():
     ep_loss_tv    = 0
     torch.cuda.empty_cache()
     # Create optimizers
-    opt_ap = torch.optim.Adam([rowPatch], lr=learing_rate, betas=(0.5, 0.999), amsgrad=True)
-    opt_ld = torch.optim.Adam([latent_shift_biggan], lr=learing_rate, betas=(0.5, 0.999), amsgrad=True)
-    # opt_ld = torch.optim.SGD([latent_shift_biggan], lr=learing_rate, momentum=0.9)
+    opt_ap = torch.optim.Adam([rowPatch], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+    opt_ld = torch.optim.Adam([latent_shift_biggan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+    # opt_ld = torch.optim.SGD([latent_shift_biggan], lr=learning_rate, momentum=0.9)
     # optimizer lr_scheduler
     scheduler_ap = torch.optim.lr_scheduler.ReduceLROnPlateau(opt_ap, 'min', patience=50)
     scheduler_ld = torch.optim.lr_scheduler.ReduceLROnPlateau(opt_ld, 'min', patience=50)
@@ -328,7 +327,7 @@ def main():
         epoch_start = checkpoint['epoch']
         start_epoch = epoch_start
         latent_shift_biggan = checkpoint['latent_shift_biggan'].to(device).requires_grad_(True)
-        opt_ld = torch.optim.Adam([latent_shift_biggan], lr=learing_rate, betas=(0.5, 0.999), amsgrad=True)
+        opt_ld = torch.optim.Adam([latent_shift_biggan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
         # The reason for DISABLE this is that if we don’t do this, the training results will be very similar.
         # opt_ld.load_state_dict(checkpoint['optimizer_state_dict_biggan']) 
 

@@ -344,7 +344,7 @@ def get_style_gan2():
         # '--output argument should specify a directory, not a file.'
     # if not os.path.exists(args.output):
         # os.makedirs(args.output)
-    network = "./stylegan2_pytorch/checkpoint/Gs.pth"
+    network = "stylegan2_pytorch/checkpoint/Gs.pth"
 
     G = stylegan2.models.load(network)
     G.eval()

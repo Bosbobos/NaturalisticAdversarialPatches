@@ -15,6 +15,7 @@ import matplotlib.image as mpimg
 import time
 from tqdm import tqdm
 from torch import autograd
+from ultralytics import YOLO
 from ensemble_tool.utils import *
 from ensemble_tool.model import train_rowPtach, eval_rowPtach
 
@@ -70,7 +71,7 @@ patch_mode                 = 0               # options: 0(patch), 1(white), 2(gr
 # fake_images_path           = "../adversarial-attack-ensemble/exp/exp07/generated/generated-images-1000.png"
 fake_images_path = apt1.patch
 # st()
-# fake_images_path           = "../adversarial-attack-ensemble/exp/exp1/generated/cv.png"
+# fake_images_path           = "exp/exp2/generated/generated-images-0008.png"
 
 # data source
 video_name                 = "WIN_20210113_18_36_46_Pro"     # WIN_20200903_16_52_27_Pro, WIN_20200903_17_17_34_Pro, WIN_20210113_18_36_46_Pro
@@ -88,6 +89,9 @@ else:
 label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_"+sss
 enable_show_map_process    = False
 
+if model_name == "yolov8":
+    label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_yolov4"
+
 # sss = sss+'_'+fake_images_path[35:40] # -6:-4
 temp_f = fake_images_path.split('/')[2]
 if temp_f[0]=='exp':
@@ -100,8 +104,8 @@ else:
 output_video_name          = "video_output"
 output_folder              = "eval_output/"+sss+"/"
 output_video_foler         = output_folder + "video/"
-output_imgs_foler          = output_folder + "output_imgs/"
-output_labels_foler        = output_folder + "output_imgs/yolo-labels/"
+output_imgs_folder          = output_folder + "output_imgs/"
+output_labels_folder        = output_folder + "output_imgs/yolo-labels/"
 outout_labelRescale_folder = output_folder + "output_imgs/yolo-labels-rescale/"
 
 # output mode
@@ -121,17 +125,20 @@ if(yolo_tiny):
     if(model_name == "yolov3" or model_name == "yolov4"):
         tiny_str = "tiny"
 if(model_name == "yolov2"):
-    output_labels_foler        = output_labels_foler[:-1] + "_yolov2" + tiny_str + output_labels_foler[-1]
-    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov2" + tiny_str + output_labels_foler[-1]
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov2" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov2" + tiny_str + output_labels_folder[-1]
 elif(model_name == "yolov3"):
-    output_labels_foler        = output_labels_foler[:-1] + "_yolov3" + tiny_str + output_labels_foler[-1]
-    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov3" + tiny_str + output_labels_foler[-1]
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov3" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov3" + tiny_str + output_labels_folder[-1]
 elif(model_name == "yolov4"):
-    output_labels_foler        = output_labels_foler[:-1] + "_yolov4" + tiny_str + output_labels_foler[-1]
-    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov4" + tiny_str + output_labels_foler[-1]
-if(model_name == "fasterrcnn"):
-    output_labels_foler        = output_labels_foler[:-1] + "_fasterrcnn" + tiny_str + output_labels_foler[-1]
-    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_foler[-1]
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov4" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov4" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov8"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov8" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov8" + tiny_str + output_labels_folder[-1]
+elif(model_name == "fasterrcnn"):
+    output_labels_folder        = output_labels_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
 
 # init cls_conf_threshold
 # options:  Test (labels-rescale contain [confidence])    /    Train (labels-rescale doesn't contain [confidence])
@@ -158,8 +165,8 @@ else:
 if(enable_output_data):
     os.makedirs(output_folder, exist_ok=True)
     os.makedirs(output_video_foler, exist_ok=True)
-    os.makedirs(output_imgs_foler, exist_ok=True)
-    os.makedirs(output_labels_foler, exist_ok=True)
+    os.makedirs(output_imgs_folder, exist_ok=True)
+    os.makedirs(output_labels_folder, exist_ok=True)
     os.makedirs(outout_labelRescale_folder, exist_ok=True)
 
 
@@ -222,7 +229,7 @@ elif(patch_mode == 2):
     # gray
     fake_images_input = torch.zeros((3, fake_images_input.size()[-2], fake_images_input.size()[-1]), device=device).to(torch.float).unsqueeze(0) +0.5
 elif(patch_mode == 3):
-    # randon
+    # random
     fake_images_input = torch.rand((3, fake_images_input.size()[-2], fake_images_input.size()[-1]), device=device).to(torch.float).unsqueeze(0)
 
 
@@ -240,6 +247,9 @@ if(model_name == "yolov4"):
 if(model_name == "fasterrcnn"):
     # just use fasterrcnn directly
     detector = None
+if(model_name == "yolov8"):
+    detectorYolov8 = YOLO("yolov8n.pt")
+    detector = detectorYolov8
 
 
 ### -----------------------------------------------------------  Output Video  ---------------------------------------------------------------------- ###
@@ -271,6 +281,8 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
         max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=imm_tensor, cls_id_attacked=cls_id_attacked, with_bbox=True)
     if(model_name == "fasterrcnn"):
         max_prob, max_prob, bboxes = FasterrcnnResnet50(tensor_image_inputs=imm_tensor, device=device, cls_id_attacked=cls_id_attacked, threshold=0.5)
+    if model_name == "yolov8":
+        bboxes = detector(imm_tensor)
 
     # add patch
     # get bbox label.
@@ -309,6 +321,39 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                 labels_rescale.append(label_rescale)
         labels = np.array(labels)
         labels_rescale = np.array(labels_rescale)
+    elif(model_name == "yolov8"):
+        for b in bbox.boxes:
+            detected_class = int(b.cls.cpu().item())
+            orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
+            if detected_class == int(cls_id_attacked):
+                conf = b.conf.cpu().item()
+                # For labels: using xywh format
+                x_center, y_center, w, h = (
+                    b.xywh[0][0].cpu().item() / orig_width,
+                    b.xywh[0][1].cpu().item() / orig_height,
+                    b.xywh[0][2].cpu().item() / orig_width,
+                    b.xywh[0][3].cpu().item() / orig_height,
+                )
+                label = np.array(
+                    [detected_class, x_center, y_center, w, h, conf], dtype=np.float32
+                )
+                labels.append(label)
+                # For labels_rescale: using xyxy format
+                left, top, right, bottom = (
+                    b.xyxy[0][0].cpu().item(),
+                    b.xyxy[0][1].cpu().item(),
+                    b.xyxy[0][2].cpu().item(),
+                    b.xyxy[0][3].cpu().item(),
+                )
+                label_rescale = np.array(
+                    [detected_class, conf, left, top, right, bottom], dtype=np.float32
+                )
+                labels_rescale.append(label_rescale)
+
+        labels = np.array(labels)
+        labels_rescale = np.array(labels_rescale)
+    else:
+        raise Exception("Model not implemented")
     # Take only the top 14 largest of objectness_conf (max_labels_per_img)
     if(labels.shape[0]>0):
         num_bbox, _ = labels.shape
@@ -380,6 +425,39 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         labels_rescale.append(label_rescale)
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
+            elif(model_name == "yolov8"):
+                for b in bbox.boxes:
+                    detected_class = int(b.cls.cpu().item())
+                    orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
+                    if detected_class == int(cls_id_attacked):
+                        conf = b.conf.cpu().item()
+                        # For labels: using xywh format
+                        x_center, y_center, w, h = (
+                            b.xywh[0][0].cpu().item() / orig_width,
+                            b.xywh[0][1].cpu().item() / orig_height,
+                            b.xywh[0][2].cpu().item() / orig_width,
+                            b.xywh[0][3].cpu().item() / orig_height,
+                        )
+                        label = np.array(
+                            [detected_class, x_center, y_center, w, h, conf], dtype=np.float32
+                        )
+                        labels.append(label)
+                        # For labels_rescale: using xyxy format
+                        left, top, right, bottom = (
+                            b.xyxy[0][0].cpu().item(),
+                            b.xyxy[0][1].cpu().item(),
+                            b.xyxy[0][2].cpu().item(),
+                            b.xyxy[0][3].cpu().item(),
+                        )
+                        label_rescale = np.array(
+                            [detected_class, conf, left, top, right, bottom], dtype=np.float32
+                        )
+                        labels_rescale.append(label_rescale)
+
+                labels = np.array(labels)
+                labels_rescale = np.array(labels_rescale)
+            else:
+                raise Exception("Model not implemented")
             # Take only the top 14 largest of objectness_conf (max_labels_per_img)
             if(labels.shape[0]>0):
                 num_bbox, _ = labels.shape
@@ -396,10 +474,10 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
     # output data
     if(enable_output_data):
         # save clear imgs
-        output_path = str(output_imgs_foler)+'%s.png' % (iname)
+        output_path = str(output_imgs_folder)+'%s.png' % (iname)
         save_image(img_output, output_path)
         # save bbox
-        output_path = str(output_labels_foler)+'%s.txt' % (iname)
+        output_path = str(output_labels_folder)+'%s.txt' % (iname)
         np.savetxt(output_path, labels, fmt='%.6f')
     if(enable_output_data):
         # save recale bbox
@@ -424,11 +502,11 @@ video_writer.close()
 # MAP
 if(enable_count_map):
     if not(enable_show_map_process):
-        output_imgs_foler=None
+        output_imgs_folder=None
     # st()
     output_map = eval_map.count(path_ground_truth=label_labelRescale_folder, 
                                 path_detection_results=outout_labelRescale_folder, 
-                                path_images_optional=output_imgs_foler)
+                                path_images_optional=output_imgs_folder)
     # save
     # with open("./"+output_folder+"map.txt", "w") as text_file:
     #     text_file.write(str(output_map))
