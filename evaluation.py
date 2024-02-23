@@ -64,7 +64,7 @@ enable_no_random           = True            # NOT random patch "light and shado
 enable_check_patch         = False           # check input patch by human
 # patch
 cls_id_attacked            = 0               # ID of the object to which the patch is posted
-patch_scale                = 0.0             # patch size
+patch_scale                = 0.2             # patch size
 max_labels_per_img         = 14              # maximum number of objects per image
 patch_mode                 = 0              # options: 0(patch), 1(white), 2(gray), 3(random)
 # fake_images_path           = "../adversarial-attack-ensemble/patch_sample/3output.png"

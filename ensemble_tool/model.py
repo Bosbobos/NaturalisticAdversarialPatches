@@ -38,7 +38,7 @@ class TotalVariation(nn.Module):
         return tv/torch.numel(adv_patch)
 
 def eval_rowPtach(generator, batch_size, device
-                , latent_shift, alpah_latent
+                , latent_shift, alpha_latent
                 , input_imgs, label, patch_scale, cls_id_attacked
                 , denormalisation
                 , model_name, detector
@@ -244,7 +244,7 @@ def eval_rowPtach(generator, batch_size, device
 def train_rowPtach(method_num, generator
                     , discriminator
                     , opt, batch_size, device
-                    , latent_shift, alpah_latent
+                    , latent_shift, alpha_latent
                     , input_imgs, label, patch_scale, cls_id_attacked
                     , denormalisation
                     , model_name, detector
@@ -283,7 +283,7 @@ def train_rowPtach(method_num, generator
             z = zs[0]
             # print("z:",z[:10])
             if enable_shift_deformator:
-                z = ((1-alpah_latent)*z) + (alpah_latent*fixed_latent_biggan)
+                z = ((1-alpha_latent)*z) + (alpha_latent*fixed_latent_biggan)
                 latent_shift = torch.clamp((max_value_latent_item*latent_shift),max=max_value_latent_item,min=-max_value_latent_item)
                 interpolation_deformed = interpolate_shift(generator, z.unsqueeze(0),
                                         latent_shift=latent_shift.unsqueeze(0),
@@ -291,7 +291,7 @@ def train_rowPtach(method_num, generator
                                         device=device)
             else:
                 # Directly, change z.  z = z + latent_shift
-                z = ((1-alpah_latent)*z) + (alpah_latent*latent_shift)
+                z = ((1-alpha_latent)*z) + (alpha_latent*latent_shift)
                 interpolation_deformed = interpolate_shift(generator, z.unsqueeze(0),
                                         latent_shift=torch.zeros_like(z.unsqueeze(0)).to(device),
                                         deformator=None,
@@ -303,7 +303,7 @@ def train_rowPtach(method_num, generator
         else:
             # Generate fake images
             latent = torch.rand(latent_shift.size(), device=device)
-            latent_merged = ((1-alpah_latent)*latent) + (alpah_latent*latent_shift)
+            latent_merged = ((1-alpha_latent)*latent) + (alpha_latent*latent_shift)
             if not(generator == None):
                 fake_images = generator(latent_merged)
                 if(denormalisation):
@@ -357,7 +357,7 @@ def train_rowPtach(method_num, generator
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
                 
-                print(f"obtained loss_det: {loss_det}")
+                # print(f"obtained loss_det: {loss_det}")
             elif(model_name == "yolov3"):
                 max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
                 # loss_det
@@ -397,7 +397,7 @@ def train_rowPtach(method_num, generator
                 # no loss_overlap # TODO: Check what is this (?)
                 loss_overlap = torch.tensor(0.0).to(device)
                 
-                print(f"obtained loss_det: {loss_det}")
+                # print(f"obtained loss_det: {loss_det}")
                 
             else:
                 raise Exception("Model not implemented")
@@ -413,6 +413,7 @@ def train_rowPtach(method_num, generator
             loss = min_loss_det + (weight_loss_overlap * loss_overlap) + (weight_loss_tv * loss_tv) + 1e-3 * D_loss
         else:
             loss = min_loss_det + (weight_loss_overlap * loss_overlap) + (weight_loss_tv * loss_tv) 
+            print(f"[DEBUG] Final loss before backward: {loss}")
 
         # Update generator weights
         loss.backward()
@@ -479,6 +480,9 @@ def train_rowPtach(method_num, generator
         # print("loss_det:",loss)
         # st()
         return loss_det, loss_overlap, loss_tv, p_img_batch, fake_images, D_loss
+    
+    #######################################################################################
+    ## From here, the code is for StyleGAN2 (Which does not work at the moment) (it should now) (it does)
     elif method_num==3: # stylegan2
         opt.zero_grad()
         # latent_shift = torch.clamp(latent_shift,-4,4)
@@ -535,7 +539,7 @@ def train_rowPtach(method_num, generator
                 loss_det = torch.mean(max_prob_obj_cls)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
-            if(model_name == "yolov3"):
+            elif(model_name == "yolov3"):
                 max_prob_obj, max_prob_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
                 # loss_det
                 if multi_score:
@@ -569,7 +573,7 @@ def train_rowPtach(method_num, generator
                 # no loss_overlap # TODO: Check what is this (?)
                 loss_overlap = torch.tensor(0.0).to(device)
             else:
-                raise Exception("Model not implemented")
+                raise Exception(f"Model not implemented: {model_name}")
             if(model_name == "fasterrcnn"):
                 max_prob, max_prob, bboxes = FasterrcnnResnet50(tensor_image_inputs=p_img_batch, device=device, cls_id_attacked=cls_id_attacked, threshold=0.5)
                 # loss_det

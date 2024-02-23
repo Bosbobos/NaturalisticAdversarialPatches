@@ -52,8 +52,8 @@ def main():
     ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
     Gparser = argparse.ArgumentParser(description='Advpatch Training')
     Gparser.add_argument('--seed', default='15089',type=int, help='choose seed') 
-    Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, yolov8 fasterrcnn')
-    Gparser.add_argument('--classBiggan', default=294, type=int, help='class in big gan') # 84:peacock, 294:brownbear
+    Gparser.add_argument('--model', default='yolov4', type=str, help='options : yolov2, yolov3, yolov4, yolov5, yolov8, fasterrcnn')
+    Gparser.add_argument('--classBiggan', default=84, type=int, help='class in big gan') # 84:peacock, 294:brownbear, 145:penguin
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     apt = Gparser.parse_known_args()[0]
     print(apt)
@@ -94,14 +94,14 @@ def main():
     epoch_save            = 10001       # from how many A to save a checkpoint
     cls_id_attacked       = 0         # the class attacked. (0: person). List: https://gist.github.com/AruniRC/7b3dadd004da04c80198557db5da4bda
     cls_id_generation     = apt.classBiggan       # the class generated at patch. (259: pomeranian) List: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
-    alpha_latent          = 0.99       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
+    alpha_latent          = 1.0       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
     rowPatch_size         = 128       # the size of patch without gan. It's just like "https://openaccess.thecvf.com/content_CVPRW_2019/html/CV-COPS/Thys_Fooling_Automated_Surveillance_Cameras_Adversarial_Patches_to_Attack_Person_Detection_CVPRW_2019_paper.html"
-    method_num            = 2         # options : 0 (rowPatch without GAN. randon) / 2 (BigGAN) / 3 (styleGAN2)
+    method_num            = 3         # options : 0 (rowPatch without GAN. randon) / 2 (BigGAN) / 3 (styleGAN2)
     # parameters of BigGAN
-    enable_shift_deformator           = False   # True: patch = G(deformator(z))  /  False: patch = G(z) 
+    enable_shift_deformator           = True   # True: patch = G(deformator(z))  /  False: patch = G(z) 
     enable_human_annotated_directions = False   # True: only vectors that annotated by human  /   False: all latent vectors
-    max_value_latent_item             = 10       # the max value of latent vectors
-    # enable_latent_clipping            = True    # added by kung. To clip the latent code when optimize
+    max_value_latent_item             = 100       # the max value of latent vectors
+    enable_latent_clipping            = False    # added by kung. To clip the latent code when optimize
     # pre-trained checkpoint
     checkpoint_path       = "checkpoint/gan_params_10.pt"        # if "retrain_gan" equal "True", and then use this path.
     # pre latent vectors
@@ -177,13 +177,18 @@ def main():
         
         # BigGAN input.     input = ((1-alpha) * fixed) + (alpha * delta)
         fixed_latent_biggan = torch.rand(len_z, device=device)                                                                   # the fixed
-        # latent_shift_biggan = torch.rand(len_latent, device=device).requires_grad_(True) 
-        latent_shift_biggan = torch.normal(0.0, torch.ones(len_latent)).to(device).requires_grad_(True)                                        # the delta
+        # latent_shift_gan = torch.rand(len_latent, device=device).requires_grad_(True) 
+        latent_shift_gan = torch.normal(0.0, torch.ones(len_latent)).to(device).requires_grad_(True)                                        # the delta
     elif method_num ==3:
         stylegan_G = run_generator.get_style_gan2()
         len_z = stylegan_G.latent_size
         annotated_idx = []
         len_latent = len_z
+        
+        ## This is new and I renamed latent_shift_gan to latent_shift_biggan, note for later in case it breaks sth
+        fixed_latent_biggan = torch.rand(len_z, device=device)   
+        latent_shift_gan = torch.normal(0.0, torch.ones(len_latent)).to(device).requires_grad_(True)
+        
         print("setting: len_latent : "+str(len_latent))
         print()
 
@@ -197,7 +202,7 @@ def main():
             z_loaded = np.load(f)
         # to tensor (tesnor size: 120)
         z_loaded_tensor = torch.from_numpy(z_loaded)[0]
-        latent_shift_biggan = z_loaded_tensor.to(device).requires_grad_(True)
+        latent_shift_gan = z_loaded_tensor.to(device).requires_grad_(True)
 
     def show(img):
         npimg = img.numpy()
@@ -210,7 +215,7 @@ def main():
         # generator
         if is_conditional(generator_biggan):
             generator_biggan.set_classes(cls_id_generation)
-        test_img = generator_biggan(latent_shift_biggan.unsqueeze(0))
+        test_img = generator_biggan(latent_shift_gan.unsqueeze(0))
         test_img = (test_img + 1) * 0.5
         # show
         show(test_img.cpu().detach()[0])
@@ -262,8 +267,8 @@ def main():
     if(model_name == "yolov5"):
         detectorYolov5 = YOLO("yolov5n.pt")
         detector = detectorYolov5
-        batch_size_second      = 16
-        learning_rate          = 0.005
+        batch_size_second      = 32
+        learning_rate          = 0.05
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
         batch_size_second = 8
@@ -322,8 +327,8 @@ def main():
     torch.cuda.empty_cache()
     # Create optimizers
     opt_ap = torch.optim.Adam([rowPatch], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
-    opt_ld = torch.optim.Adam([latent_shift_biggan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
-    # opt_ld = torch.optim.SGD([latent_shift_biggan], lr=learning_rate, momentum=0.9)
+    opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+    # opt_ld = torch.optim.SGD([latent_shift_gan], lr=learning_rate, momentum=0.9)
     # optimizer lr_scheduler
     scheduler_ap = torch.optim.lr_scheduler.ReduceLROnPlateau(opt_ap, 'min', patience=50)
     scheduler_ld = torch.optim.lr_scheduler.ReduceLROnPlateau(opt_ld, 'min', patience=50)
@@ -334,8 +339,8 @@ def main():
         checkpoint = torch.load(PATH)
         epoch_start = checkpoint['epoch']
         start_epoch = epoch_start
-        latent_shift_biggan = checkpoint['latent_shift_biggan'].to(device).requires_grad_(True)
-        opt_ld = torch.optim.Adam([latent_shift_biggan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+        latent_shift_gan = checkpoint['latent_shift_gan'].to(device).requires_grad_(True)
+        opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
         # The reason for DISABLE this is that if we don’t do this, the training results will be very similar.
         # opt_ld.load_state_dict(checkpoint['optimizer_state_dict_biggan']) 
 
@@ -372,7 +377,7 @@ def main():
         main_discriminator   = discriminator_biggan
         main_scheduler       = scheduler_ld
         main_optimizer       = opt_ld
-        main_latentShift     = latent_shift_biggan
+        main_latentShift     = latent_shift_gan
         main_denormalisation = False
         main_deformator      = deformator
         # init
@@ -384,7 +389,7 @@ def main():
         main_discriminator   = None
         main_scheduler       = scheduler_ld
         main_optimizer       = opt_ld
-        main_latentShift     = latent_shift_biggan
+        main_latentShift     = latent_shift_gan
         main_denormalisation = False
         main_deformator      = None
         # init
@@ -408,13 +413,13 @@ def main():
                 # Train with GANLatentDiscovery
                 # st()
                 # opt_ld.zero_grad()
-                                                # np.save('gg', latent_shift_biggan.cpu().detach().numpy())   
-                                                # np.argwhere(np.load('gg.npy')!=latent_shift_biggan.cpu().detach().numpy())
-                latent_shift_biggan.data = torch.round(latent_shift_biggan.data * 10000) * (10**-4)
+                                                # np.save('gg', latent_shift_gan.cpu().detach().numpy())   
+                                                # np.argwhere(np.load('gg.npy')!=latent_shift_gan.cpu().detach().numpy())
+                latent_shift_gan.data = torch.round(latent_shift_gan.data * 10000) * (10**-4)
                 loss_det, loss_overlap, loss_tv, p_img_batch, fake_images_denorm, D_loss = train_rowPtach(method_num=method_num, generator=main_generator
                                                                         , discriminator = main_discriminator
                                                                         , opt=main_optimizer, batch_size=batch_size_second, device=device
-                                                                        , latent_shift=latent_shift_biggan, alpah_latent=alpha_latent
+                                                                        , latent_shift=latent_shift_gan, alpha_latent=alpha_latent
                                                                         , input_imgs=img_batch, label=lab_batch, patch_scale=patch_scale, cls_id_attacked=cls_id_attacked
                                                                         , denormalisation=main_denormalisation
                                                                         , model_name = model_name, detector=detector
@@ -443,8 +448,8 @@ def main():
                 ep_loss_det   += loss_det
                 ep_loss_overlap += loss_overlap
                 ep_loss_tv    += loss_tv
-        # if enable_latent_clipping:
-            # latent_shift_biggan = torch.clamp(latent_shift_biggan,-3,3)
+        if enable_latent_clipping:
+            latent_shift_gan = torch.clamp(latent_shift_gan,-3,3)
         ep_loss_det   = ep_loss_det/epoch_length_second
         ep_loss_overlap = ep_loss_overlap/epoch_length_second
         ep_loss_tv    = ep_loss_tv/epoch_length_second
@@ -462,14 +467,14 @@ def main():
         writer.add_scalar('ep_loss_overlap', ep_loss_overlap, epoch)
         writer.add_scalar('ep_loss_tv', ep_loss_tv, epoch)
         writer.add_scalar('D_loss', D_loss, epoch)
-        writer.add_scalar('latent_code_inf_norm', torch.max(torch.abs(latent_shift_biggan)), epoch)
-        writer.add_scalar('latent_code_1st_norm', torch.norm(latent_shift_biggan, p=1)/latent_shift_biggan.shape[0], epoch)
+        writer.add_scalar('latent_code_inf_norm', torch.max(torch.abs(latent_shift_gan)), epoch)
+        writer.add_scalar('latent_code_1st_norm', torch.norm(latent_shift_gan, p=1)/latent_shift_gan.shape[0], epoch)
 
         print("ep_loss_det      : "+str(ep_loss_det))
         print("ep_loss_overlap  : "+str(ep_loss_overlap))
         print("ep_loss_tv       : "+str(ep_loss_tv))
         print("D_loss           : "+str(D_loss))
-        print("latent code:     :'"+f"norn_inf:{torch.max(torch.abs(latent_shift_biggan)):.4f}; norm_1:{torch.norm(latent_shift_biggan, p=1)/latent_shift_biggan.shape[0]:.4f}")
+        print("latent code:     :'"+f"norn_inf:{torch.max(torch.abs(latent_shift_gan)):.4f}; norm_1:{torch.norm(latent_shift_gan, p=1)/latent_shift_gan.shape[0]:.4f}")
 
         if(method_num == 0):
             # save patch
@@ -480,7 +485,7 @@ def main():
             save_samples_GANLatentDiscovery(method_num=method_num,
                                             index=epoch, sample_dir=sample_dir, 
                                             deformator=deformator, G=main_generator, 
-                                            latent_shift=latent_shift_biggan, param_rowPatch_latent=alpha_latent, fixed_rand_latent=fixed_latent_biggan, 
+                                            latent_shift=latent_shift_gan, param_rowPatch_latent=alpha_latent, fixed_rand_latent=fixed_latent_biggan, 
                                             max_value_latent_item=max_value_latent_item, 
                                             enable_shift_deformator=enable_shift_deformator, 
                                             device=device)
@@ -488,7 +493,7 @@ def main():
             save_samples_GANLatentDiscovery(method_num=method_num,
                                             index=epoch, sample_dir=sample_dir, 
                                             deformator=None, G=main_generator, 
-                                            latent_shift=latent_shift_biggan, param_rowPatch_latent=alpha_latent, fixed_rand_latent=fixed_latent_biggan, 
+                                            latent_shift=latent_shift_gan, param_rowPatch_latent=alpha_latent, fixed_rand_latent=fixed_latent_biggan, 
                                             max_value_latent_item=max_value_latent_item, 
                                             enable_shift_deformator=enable_shift_deformator, 
                                             device=device)
@@ -504,7 +509,7 @@ def main():
             torch.save({
                         'epoch': EPOCH,
                         'optimizer_state_dict_biggan': opt_ld.state_dict(),
-                        'latent_shift_biggan':latent_shift_biggan.data,
+                        'latent_shift_gan':latent_shift_gan.data,
                         'alpha_latent':alpha_latent,
                         'annotated_idx':annotated_idx,
                         'enable_shift_deformator':enable_shift_deformator,
