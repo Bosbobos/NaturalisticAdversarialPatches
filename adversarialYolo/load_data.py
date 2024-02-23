@@ -1176,9 +1176,15 @@ class InriaDataset(Dataset):
     """
 
     def __init__(self, img_dir, lab_dir, max_lab, imgsize, shuffle=True):
+        print(f"Loading dataset from img_dir: {img_dir}")
+        print(f"Loading dataset with lab_dir: {lab_dir}")
         n_png_images = len(fnmatch.filter(os.listdir(img_dir), '*.png'))
         n_jpg_images = len(fnmatch.filter(os.listdir(img_dir), '*.jpg'))
+        
         n_images = n_png_images + n_jpg_images
+        
+        print(f"Number of images: {n_images}")
+        
         n_labels = len(fnmatch.filter(os.listdir(lab_dir), '*.txt'))
         assert n_images == n_labels, "Number of images and number of labels don't match"
         self.len = n_images

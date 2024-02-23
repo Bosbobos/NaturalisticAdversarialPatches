@@ -121,6 +121,8 @@ def eval_rowPtach(generator, batch_size, device
             loss_det = torch.mean(max_prob_obj_cls)
             # loss_overlap
             loss_overlap = -torch.mean(overlap_score)
+            
+            # print(f"obtained loss_det: {loss_det}")
         elif(model_name == "yolov3"):
             max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
             # loss_det
@@ -147,7 +149,7 @@ def eval_rowPtach(generator, batch_size, device
             loss_det = torch.mean(max_prob)
             # no loss_overlap
             loss_overlap = torch.tensor(0.0).to(device)
-        elif model_name == "yolov8":
+        elif model_name in ("yolov8", "yolov5"):
             bboxes = detector(p_img_batch, verbose=False)
             combined_probs = []
             for box in bboxes[0].boxes:
@@ -158,6 +160,8 @@ def eval_rowPtach(generator, batch_size, device
                     loss_det = torch.mean(torch.stack(combined_probs))
             else:
                 loss_det = torch.tensor(0.0).to(device)
+                
+            # print(f"obtained loss_det: {loss_det}")
         else:
             raise Exception("Model not implemented")
 
@@ -165,6 +169,7 @@ def eval_rowPtach(generator, batch_size, device
             min_loss_det = loss_det
     
     loss_det = min_loss_det
+    # print(f"final loss_det: {loss_det}")
 
     # draw bbox
     if enable_with_bbox and len(bboxes)>0:
@@ -178,13 +183,13 @@ def eval_rowPtach(generator, batch_size, device
             class_names = load_class_names(namesfile)
             # sample first image
             # print("bbox : "+str(bbox))
-            if model_name == "yolov8":
+            if model_name in ("yolov8", "yolov5"):
                 bbox = bboxes[b].boxes
             else:
                 bbox = bboxes[b]
             for box in bbox:
                 # print("box size : "+str(box.size()))
-                if model_name == "yolov8":
+                if model_name in ("yolov8", "yolov5"):
                     cls_id = box.cls.int()
                     cls_name = class_names[cls_id]
                     cls_conf = box.conf
@@ -208,7 +213,7 @@ def eval_rowPtach(generator, batch_size, device
                             right       = int(box[2] * img_width)
                             top         = int(box[1] * img_height)
                             bottom      = int(box[3] * img_height)
-                        elif model_name == "yolov8":
+                        elif model_name in ("yolov8", "yolov5"):
                             left, top, right, bottom = (
                                 int(box.xyxy[0][0].cpu().item()),
                                 int(box.xyxy[0][1].cpu().item()),
@@ -351,6 +356,8 @@ def train_rowPtach(method_num, generator
                 loss_det = torch.mean(max_prob_obj_cls)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
+                
+                print(f"obtained loss_det: {loss_det}")
             elif(model_name == "yolov3"):
                 max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
                 # loss_det
@@ -376,7 +383,7 @@ def train_rowPtach(method_num, generator
                 loss_det = torch.mean(max_prob)
                 # no loss_overlap
                 loss_overlap = torch.tensor(0.0).to(device)
-            elif model_name == "yolov8":
+            elif model_name in ("yolov8", "yolov5"):
                 bboxes = detector(p_img_batch, verbose=False)
                 combined_probs = []
                 for box in bboxes[0].boxes:
@@ -389,6 +396,8 @@ def train_rowPtach(method_num, generator
                     loss_det = torch.tensor(0.0).to(device)
                 # no loss_overlap # TODO: Check what is this (?)
                 loss_overlap = torch.tensor(0.0).to(device)
+                
+                print(f"obtained loss_det: {loss_det}")
                 
             else:
                 raise Exception("Model not implemented")
@@ -442,7 +451,7 @@ def train_rowPtach(method_num, generator
                             right       = int(box[2] * img_width)
                             top         = int(box[1] * img_height)
                             bottom      = int(box[3] * img_height)
-                        elif model_name == "yolov8":
+                        elif model_name in ("yolov8", "yolov5"):
                             left, top, right, bottom = (
                                 int(box.xyxy[0][0].cpu().item()),
                                 int(box.xyxy[0][1].cpu().item()),
@@ -546,7 +555,7 @@ def train_rowPtach(method_num, generator
                     loss_det = torch.mean(max_prob_obj)
                 # loss_overlap
                 loss_overlap = -torch.mean(overlap_score)
-            elif model_name == "yolov8":
+            elif model_name in ("yolov8", "yolov5"):
                 bboxes = detector(p_img_batch, verbose=False)
                 combined_probs = []
                 for box in bboxes[0].boxes:

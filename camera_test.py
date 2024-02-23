@@ -31,7 +31,7 @@ from ultralytics import YOLO
 
 ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
 # model_name            = "yolov4"    # yolov4, yolov3, yolov2
-model_name = "yolov8"
+model_name = "yolov5"
 yolo_tiny             = True        # only yolov4, yolov3
 
 ##############################################
@@ -105,6 +105,9 @@ if(model_name == "yolov4"):
 if(model_name == "yolov8"):
     detectorYolov8 = YOLO("yolov8n.pt")
     detector = detectorYolov8
+if(model_name == "yolov5"):
+    detectorYolov8 = YOLO("yolov5n.pt")
+    detector = detectorYolov8
 
 
 ### -----------------------------------------------------------     Camera     ---------------------------------------------------------------------- ###
@@ -130,7 +133,7 @@ while(True):
     
     
     # detect image
-    if model_name == "yolov8":
+    if model_name in ("yolov8", "yolov5"):
         bboxes = detector(imm_tensor)
     else:
         _, _, bboxes = detector.detect(input_imgs=imm_tensor, cls_id_attacked=cls_id_attacked, with_bbox=True) # Be always with bbox
@@ -166,7 +169,7 @@ while(True):
         labels = np.array(labels)
         labels_rescale = np.array(labels_rescale)
         
-    elif(model_name == "yolov8"):
+    elif(model_name in ("yolov8", "yolov5")):
         for b in bbox.boxes:
             detected_class = int(b.cls.cpu().item())
             orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
@@ -199,12 +202,6 @@ while(True):
         labels_rescale = np.array(labels_rescale)
     else:
         raise Exception("Model not implemented")
-        
-    # # !!!!!!!!!!
-    # print(f"Labels: {labels}")
-    # print(f"Labels rescale: {labels_rescale}")
-    # exit(0)
-    # # !!!!!!!!!!
         
     # Take only the top 14 largest of objectness_conf (max_labels_per_img)
     if(labels.shape[0]>0):

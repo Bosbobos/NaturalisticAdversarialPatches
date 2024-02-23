@@ -37,7 +37,7 @@ import argparse
 
 ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
 Gparser = argparse.ArgumentParser(description='Advpatch evaluation')
-Gparser.add_argument('--model', default='yolov4', type=str, help='options : yolov2, yolov3, yolov4, fasterrcnn')
+Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, fasterrcnn')
 Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
 Gparser.add_argument('--patch', default='', help='patch location')
 apt1, unpar = Gparser.parse_known_args()
@@ -60,13 +60,13 @@ enable_blurred             = False
 enable_with_bbox           = True            # outputs with bbox 
 # other setting
 enable_show_plt            = False           # check output images during testing by human
-enable_no_random           = True            # NOT randon patch "light and shadow changes"
+enable_no_random           = True            # NOT random patch "light and shadow changes"
 enable_check_patch         = False           # check input patch by human
 # patch
 cls_id_attacked            = 0               # ID of the object to which the patch is posted
-patch_scale                = 0.2             # patch size
+patch_scale                = 0.0             # patch size
 max_labels_per_img         = 14              # maximum number of objects per image
-patch_mode                 = 0               # options: 0(patch), 1(white), 2(gray), 3(randon)
+patch_mode                 = 0              # options: 0(patch), 1(white), 2(gray), 3(random)
 # fake_images_path           = "../adversarial-attack-ensemble/patch_sample/3output.png"
 # fake_images_path           = "../adversarial-attack-ensemble/exp/exp07/generated/generated-images-1000.png"
 fake_images_path = apt1.patch
@@ -89,7 +89,7 @@ else:
 label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_"+sss
 enable_show_map_process    = False
 
-if model_name == "yolov8":
+if model_name in ("yolov8", "yolov5"):
     label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_yolov4"
 
 # sss = sss+'_'+fake_images_path[35:40] # -6:-4
@@ -136,6 +136,9 @@ elif(model_name == "yolov4"):
 elif(model_name == "yolov8"):
     output_labels_folder        = output_labels_folder[:-1] + "_yolov8" + tiny_str + output_labels_folder[-1]
     outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov8" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov5"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov5" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov5" + tiny_str + output_labels_folder[-1]
 elif(model_name == "fasterrcnn"):
     output_labels_folder        = output_labels_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
     outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
@@ -250,6 +253,9 @@ if(model_name == "fasterrcnn"):
 if(model_name == "yolov8"):
     detectorYolov8 = YOLO("yolov8n.pt")
     detector = detectorYolov8
+if(model_name == "yolov5"):
+    detectorYolov5 = YOLO("yolov5n.pt")
+    detector = detectorYolov5
 
 
 ### -----------------------------------------------------------  Output Video  ---------------------------------------------------------------------- ###
@@ -281,7 +287,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
         max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=imm_tensor, cls_id_attacked=cls_id_attacked, with_bbox=True)
     if(model_name == "fasterrcnn"):
         max_prob, max_prob, bboxes = FasterrcnnResnet50(tensor_image_inputs=imm_tensor, device=device, cls_id_attacked=cls_id_attacked, threshold=0.5)
-    if model_name == "yolov8":
+    if model_name in ("yolov8", "yolov5"):
         bboxes = detector(imm_tensor)
 
     # add patch
@@ -321,7 +327,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                 labels_rescale.append(label_rescale)
         labels = np.array(labels)
         labels_rescale = np.array(labels_rescale)
-    elif(model_name == "yolov8"):
+    elif model_name in ("yolov8", "yolov5"):
         for b in bbox.boxes:
             detected_class = int(b.cls.cpu().item())
             orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
@@ -425,7 +431,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         labels_rescale.append(label_rescale)
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
-            elif(model_name == "yolov8"):
+            elif model_name in ("yolov8", "yolov5"):
                 for b in bbox.boxes:
                     detected_class = int(b.cls.cpu().item())
                     orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]

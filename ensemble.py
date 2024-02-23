@@ -52,7 +52,7 @@ def main():
     ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
     Gparser = argparse.ArgumentParser(description='Advpatch Training')
     Gparser.add_argument('--seed', default='15089',type=int, help='choose seed') 
-    Gparser.add_argument('--model', default='yolov4', type=str, help='options : yolov2, yolov3, yolov4, yolov8 fasterrcnn')
+    Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, yolov8 fasterrcnn')
     Gparser.add_argument('--classBiggan', default=294, type=int, help='class in big gan') # 84:peacock, 294:brownbear
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     apt = Gparser.parse_known_args()[0]
@@ -143,8 +143,10 @@ def main():
     if(model_name == "yolov3" or model_name == "yolov4"):
         if(yolo_tiny):
             label_folder_name = label_folder_name + 'tiny'
-    if model_name == "yolov8":
+    if model_name in ("yolov8", "yolov5"):
         label_folder_name = 'yolo-labels_yolov4' # TODO: Relabel the dataset for YOLOv8?
+        
+    print(f"label folder name: {label_folder_name}")
 
 
     # load the pre-trained from GANLatentDiscovery
@@ -256,7 +258,12 @@ def main():
         detectorYolov8 = YOLO("yolov8n.pt")
         detector = detectorYolov8
         batch_size_second      = 32
-        learning_rate          = 0.02
+        learning_rate          = 0.005
+    if(model_name == "yolov5"):
+        detectorYolov5 = YOLO("yolov5n.pt")
+        detector = detectorYolov5
+        batch_size_second      = 16
+        learning_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
         batch_size_second = 8
@@ -282,12 +289,13 @@ def main():
                                                     batch_size=batch_size_second,
                                                     shuffle=True,
                                                     num_workers=6)
+        print(f"len data loader: {len(train_loader_second)}")
     elif(dataset_second == "test"):
     # InriaDataset
         ds_image_size_second   = 416
         batch_size_second      = 16
-        train_loader_second = torch.utils.data.DataLoader(InriaDataset(img_dir='./dataset/video/output_imgs', 
-                                                                lab_dir='./dataset/video/output_imgs/yolo-labels', 
+        train_loader_second = torch.utils.data.DataLoader(InriaDataset(img_dir='./dataset/inria/Test/pos', 
+                                                                lab_dir='./dataset/inria/Train/pos/'+str(label_folder_name), 
                                                                 max_lab=14,
                                                                 imgsize=ds_image_size_second,
                                                                 shuffle=True),
