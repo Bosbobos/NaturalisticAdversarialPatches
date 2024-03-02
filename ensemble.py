@@ -52,8 +52,8 @@ def main():
     ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
     Gparser = argparse.ArgumentParser(description='Advpatch Training')
     Gparser.add_argument('--seed', default='15089',type=int, help='choose seed') 
-    Gparser.add_argument('--model', default='yolov4', type=str, help='options : yolov2, yolov3, yolov4, yolov5, yolov8, fasterrcnn')
-    Gparser.add_argument('--classBiggan', default=84, type=int, help='class in big gan') # 84:peacock, 294:brownbear, 145:penguin
+    Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, yolov5, yolov8, fasterrcnn')
+    Gparser.add_argument('--classBiggan', default=145, type=int, help='class in big gan') # 84:peacock, 294:brownbear, 145:penguin
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     apt = Gparser.parse_known_args()[0]
     print(apt)
@@ -80,7 +80,7 @@ def main():
     enable_clear_output   = False     # True: training data without any patch
     multi_score           = True     # True: detection score is "class score * objectness score" for yolo.  /  False: detection score is only "objectness score" for yolo.
     # loss weight
-    weight_loss_tv        = 0.0       # total variation loss rate    ([0-0.1])
+    weight_loss_tv        = 0.1       # total variation loss rate    ([0-0.1])
     weight_loss_overlap   = 0.0       # total bbox overlap loss rate ([0-0.1])
     # training setting
     retrain_gan           = False     # whether use pre-trained checkpoint 
@@ -94,13 +94,13 @@ def main():
     epoch_save            = 10001       # from how many A to save a checkpoint
     cls_id_attacked       = 0         # the class attacked. (0: person). List: https://gist.github.com/AruniRC/7b3dadd004da04c80198557db5da4bda
     cls_id_generation     = apt.classBiggan       # the class generated at patch. (259: pomeranian) List: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
-    alpha_latent          = 1.0       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
+    alpha_latent          = 0.99       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
     rowPatch_size         = 128       # the size of patch without gan. It's just like "https://openaccess.thecvf.com/content_CVPRW_2019/html/CV-COPS/Thys_Fooling_Automated_Surveillance_Cameras_Adversarial_Patches_to_Attack_Person_Detection_CVPRW_2019_paper.html"
-    method_num            = 3         # options : 0 (rowPatch without GAN. randon) / 2 (BigGAN) / 3 (styleGAN2)
+    method_num            = 2         # options : 0 (rowPatch without GAN. randon) / 2 (BigGAN) / 3 (styleGAN2)
     # parameters of BigGAN
-    enable_shift_deformator           = True   # True: patch = G(deformator(z))  /  False: patch = G(z) 
+    enable_shift_deformator           = False   # True: patch = G(deformator(z))  /  False: patch = G(z) 
     enable_human_annotated_directions = False   # True: only vectors that annotated by human  /   False: all latent vectors
-    max_value_latent_item             = 100       # the max value of latent vectors
+    max_value_latent_item             = 50       # the max value of latent vectors
     enable_latent_clipping            = False    # added by kung. To clip the latent code when optimize
     # pre-trained checkpoint
     checkpoint_path       = "checkpoint/gan_params_10.pt"        # if "retrain_gan" equal "True", and then use this path.
@@ -268,7 +268,7 @@ def main():
         detectorYolov5 = YOLO("yolov5n.pt")
         detector = detectorYolov5
         batch_size_second      = 32
-        learning_rate          = 0.05
+        learning_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
         batch_size_second = 8
