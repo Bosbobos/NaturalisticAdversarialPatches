@@ -80,7 +80,7 @@ def main():
     enable_clear_output   = False     # True: training data without any patch
     multi_score           = True     # True: detection score is "class score * objectness score" for yolo.  /  False: detection score is only "objectness score" for yolo.
     # loss weight
-    weight_loss_tv        = 0.1       # total variation loss rate    ([0-0.1])
+    weight_loss_tv        = 0.0       # total variation loss rate    ([0-0.1])
     weight_loss_overlap   = 0.0       # total bbox overlap loss rate ([0-0.1])
     # training setting
     retrain_gan           = False     # whether use pre-trained checkpoint 
@@ -262,12 +262,12 @@ def main():
     if(model_name == "yolov8"):
         detectorYolov8 = YOLO("yolov8n.pt")
         detector = detectorYolov8
-        batch_size_second      = 32
+        batch_size_second      = 16
         learning_rate          = 0.005
     if(model_name == "yolov5"):
         detectorYolov5 = YOLO("yolov5n.pt")
         detector = detectorYolov5
-        batch_size_second      = 32
+        batch_size_second      = 16
         learning_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly

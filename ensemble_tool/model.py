@@ -397,7 +397,7 @@ def train_rowPtach(method_num, generator
                 # no loss_overlap # TODO: Check what is this (?)
                 loss_overlap = torch.tensor(0.0).to(device)
                 
-                # print(f"obtained loss_det: {loss_det}")
+                print(f"obtained loss_det: {loss_det}")
                 
             else:
                 raise Exception("Model not implemented")
