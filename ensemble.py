@@ -56,6 +56,7 @@ def main():
     Gparser.add_argument('--classBiggan', default=259, type=int, help='class in big gan') # 84:peacock, 294:brownbear, 145:penguin
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     Gparser.add_argument('--epochs', default=1000, type=int, help='number of training epochs')
+    Gparser.add_argument('--weight_loss_tv', default=0.0, type=float, help='weight of the tv loss')
     apt = Gparser.parse_known_args()[0]
     print(apt)
     print()
@@ -81,7 +82,7 @@ def main():
     enable_clear_output   = False     # True: training data without any patch
     multi_score           = True     # True: detection score is "class score * objectness score" for yolo.  /  False: detection score is only "objectness score" for yolo.
     # loss weight
-    weight_loss_tv        = 0.0       # total variation loss rate    ([0-0.1])
+    weight_loss_tv        = apt.weight_loss_tv       # total variation loss rate    ([0-0.1])
     weight_loss_overlap   = 0.0       # total bbox overlap loss rate ([0-0.1])
     # training setting
     retrain_gan           = False     # whether use pre-trained checkpoint 
