@@ -53,8 +53,9 @@ def main():
     Gparser = argparse.ArgumentParser(description='Advpatch Training')
     Gparser.add_argument('--seed', default='15089',type=int, help='choose seed') 
     Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, yolov5, yolov8, fasterrcnn')
-    Gparser.add_argument('--classBiggan', default=145, type=int, help='class in big gan') # 84:peacock, 294:brownbear, 145:penguin
+    Gparser.add_argument('--classBiggan', default=259, type=int, help='class in big gan') # 84:peacock, 294:brownbear, 145:penguin
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
+    Gparser.add_argument('--epochs', default=1000, type=int, help='number of training epochs')
     apt = Gparser.parse_known_args()[0]
     print(apt)
     print()
@@ -86,15 +87,14 @@ def main():
     retrain_gan           = False     # whether use pre-trained checkpoint 
     patch_scale           = 0.2       # the scale of the patch attached to persons
 
-    # n_epochs              = 1000      # training total epoch
-    n_epochs              = 15      # training total epoch
+    n_epochs = apt.epochs
 
     start_epoch           = 1         # from what epoch to start training
     learning_rate         = 0.02      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
     epoch_save            = 10001       # from how many A to save a checkpoint
     cls_id_attacked       = 0         # the class attacked. (0: person). List: https://gist.github.com/AruniRC/7b3dadd004da04c80198557db5da4bda
     cls_id_generation     = apt.classBiggan       # the class generated at patch. (259: pomeranian) List: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
-    alpha_latent          = 0.99       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
+    alpha_latent          = 1.0       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
     rowPatch_size         = 128       # the size of patch without gan. It's just like "https://openaccess.thecvf.com/content_CVPRW_2019/html/CV-COPS/Thys_Fooling_Automated_Surveillance_Cameras_Adversarial_Patches_to_Attack_Person_Detection_CVPRW_2019_paper.html"
     method_num            = 2         # options : 0 (rowPatch without GAN. randon) / 2 (BigGAN) / 3 (styleGAN2)
     # parameters of BigGAN
