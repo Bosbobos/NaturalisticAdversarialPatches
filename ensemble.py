@@ -57,6 +57,7 @@ def main():
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     Gparser.add_argument('--epochs', default=1000, type=int, help='number of training epochs')
     Gparser.add_argument('--weight_loss_tv', default=0.0, type=float, help='weight of the tv loss')
+    Gparser.add_argument('--learning_rate', default=0.2, type=float, help='optimizer learning rate')
     apt = Gparser.parse_known_args()[0]
     print(apt)
     print()
@@ -91,7 +92,7 @@ def main():
     n_epochs = apt.epochs
 
     start_epoch           = 1         # from what epoch to start training
-    learning_rate         = 0.02      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
+    learning_rate         = apt.learning_rate      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
     epoch_save            = 10001       # from how many A to save a checkpoint
     cls_id_attacked       = 0         # the class attacked. (0: person). List: https://gist.github.com/AruniRC/7b3dadd004da04c80198557db5da4bda
     cls_id_generation     = apt.classBiggan       # the class generated at patch. (259: pomeranian) List: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
@@ -266,9 +267,9 @@ def main():
         batch_size_second      = 16
         learning_rate          = 0.005
     if(model_name == "yolov5"):
-        detectorYolov5 = YOLO("yolov5n.pt")
+        detectorYolov5 = YOLO("yolov5m.pt")
         detector = detectorYolov5
-        batch_size_second      = 16
+        batch_size_second      = 8
         learning_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
