@@ -57,7 +57,7 @@ def main():
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     Gparser.add_argument('--epochs', default=1000, type=int, help='number of training epochs')
     Gparser.add_argument('--weight_loss_tv', default=0.0, type=float, help='weight of the tv loss')
-    Gparser.add_argument('--learning_rate', default=0.2, type=float, help='optimizer learning rate')
+    Gparser.add_argument('--learning_rate', default=0.02, type=float, help='optimizer learning rate')
     apt = Gparser.parse_known_args()[0]
     print(apt)
     print()
