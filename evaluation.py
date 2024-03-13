@@ -383,7 +383,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
     if(len(labels) > 0):
         labels_tensor = plt2tensor(labels).to(device)
         p_img_batch, fake_images_denorm, bboxes = eval_rowPtach(generator=None, batch_size=batch_size, device=device
-                                                        , latent_shift=None, alpah_latent = None
+                                                        , latent_shift=None, alpha_latent = None
                                                         , input_imgs=imm_tensor, label=labels_tensor, patch_scale=patch_scale, cls_id_attacked=cls_id_attacked
                                                         , denormalisation = False
                                                         , model_name = model_name, detector = detector
