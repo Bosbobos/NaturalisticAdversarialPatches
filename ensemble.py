@@ -102,7 +102,7 @@ def main():
     # parameters of BigGAN
     enable_shift_deformator           = False   # True: patch = G(deformator(z))  /  False: patch = G(z) 
     enable_human_annotated_directions = False   # True: only vectors that annotated by human  /   False: all latent vectors
-    max_value_latent_item             = 50       # the max value of latent vectors
+    max_value_latent_item             = 10       # the max value of latent vectors
     enable_latent_clipping            = False    # added by kung. To clip the latent code when optimize
     # pre-trained checkpoint
     checkpoint_path       = "checkpoint/gan_params_10.pt"        # if "retrain_gan" equal "True", and then use this path.
@@ -146,7 +146,7 @@ def main():
         if(yolo_tiny):
             label_folder_name = label_folder_name + 'tiny'
     if model_name in ("yolov8", "yolov5"):
-        label_folder_name = 'yolo-labels_yolov4' # TODO: Relabel the dataset for YOLOv8?
+        label_folder_name = 'yolo-labels_yolov4tiny' # TODO: Relabel the dataset for YOLOv8?
         
     print(f"label folder name: {label_folder_name}")
 
@@ -244,33 +244,33 @@ def main():
         detectorYolov2 = DetectorYolov2(show_detail=False)
         detector = detectorYolov2
         batch_size_second      = 8
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
         # # ORIGIN
         # detector = PatchTrainer("paper_obj")
     if(model_name == "yolov3"):
         detectorYolov3 = DetectorYolov3(show_detail=False, tiny=yolo_tiny)
         detector = detectorYolov3
         batch_size_second      = 16
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second  = 4
     if(model_name == "yolov4"):
         detectorYolov4   = DetectorYolov4(show_detail=False, tiny=yolo_tiny)
         detector = detectorYolov4
         batch_size_second      = 16
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second=1
     if(model_name == "yolov8"):
         detectorYolov8 = YOLO("yolov8n.pt")
         detector = detectorYolov8
         batch_size_second      = 16
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
     if(model_name == "yolov5"):
-        detectorYolov5 = YOLO("yolov5m.pt")
+        detectorYolov5 = YOLO("yolov5s.pt")
         detector = detectorYolov5
         batch_size_second      = 8
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
         batch_size_second = 8
@@ -328,8 +328,9 @@ def main():
     ep_loss_tv    = 0
     torch.cuda.empty_cache()
     # Create optimizers
-    opt_ap = torch.optim.Adam([rowPatch], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
-    opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+    print(f"Creating optimizer with lr: {learning_rate}")
+    opt_ap = torch.optim.Adam([rowPatch], lr=learning_rate, betas=(0.9, 0.999), amsgrad=True)
+    opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.9, 0.999), amsgrad=True)
     # opt_ld = torch.optim.SGD([latent_shift_gan], lr=learning_rate, momentum=0.9)
     # optimizer lr_scheduler
     scheduler_ap = torch.optim.lr_scheduler.ReduceLROnPlateau(opt_ap, 'min', patience=50)
@@ -342,7 +343,7 @@ def main():
         epoch_start = checkpoint['epoch']
         start_epoch = epoch_start
         latent_shift_gan = checkpoint['latent_shift_gan'].to(device).requires_grad_(True)
-        opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+        opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.9, 0.999), amsgrad=True)
         # The reason for DISABLE this is that if we don’t do this, the training results will be very similar.
         # opt_ld.load_state_dict(checkpoint['optimizer_state_dict_biggan']) 
 
