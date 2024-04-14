@@ -327,8 +327,9 @@ def main():
     ep_loss_tv    = 0
     torch.cuda.empty_cache()
     # Create optimizers
-    opt_ap = torch.optim.Adam([rowPatch], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
-    opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+    print(f"Creating optimizer with lr: {learning_rate}")
+    opt_ap = torch.optim.Adam([rowPatch], lr=learning_rate, betas=(0.9, 0.999), amsgrad=True)
+    opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.9, 0.999), amsgrad=True)
     # opt_ld = torch.optim.SGD([latent_shift_gan], lr=learning_rate, momentum=0.9)
     # optimizer lr_scheduler
     scheduler_ap = torch.optim.lr_scheduler.ReduceLROnPlateau(opt_ap, 'min', patience=50)
@@ -341,7 +342,7 @@ def main():
         epoch_start = checkpoint['epoch']
         start_epoch = epoch_start
         latent_shift_gan = checkpoint['latent_shift_gan'].to(device).requires_grad_(True)
-        opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.5, 0.999), amsgrad=True)
+        opt_ld = torch.optim.Adam([latent_shift_gan], lr=learning_rate, betas=(0.9, 0.999), amsgrad=True)
         # The reason for DISABLE this is that if we don’t do this, the training results will be very similar.
         # opt_ld.load_state_dict(checkpoint['optimizer_state_dict_biggan']) 
 

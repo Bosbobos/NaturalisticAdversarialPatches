@@ -40,6 +40,7 @@ Gparser = argparse.ArgumentParser(description='Advpatch evaluation')
 Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, fasterrcnn')
 Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
 Gparser.add_argument('--patch', default='', help='patch location')
+Gparser.add_argument('--model_size', default='n', help='model size')
 apt1, unpar = Gparser.parse_known_args()
 print(apt1)
 print()
@@ -48,6 +49,7 @@ print()
 ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
 model_name                 = apt1.model        # yolov4, yolov3, yolov2, fasterrcnn
 yolo_tiny                  = apt1.tiny            # only yolov4, yolov3
+model_size = apt1.model_size
 by_rectangle               = True
 # transformation options
 enable_rotation            = False 
@@ -64,7 +66,7 @@ enable_no_random           = True            # NOT random patch "light and shado
 enable_check_patch         = False           # check input patch by human
 # patch
 cls_id_attacked            = 0               # ID of the object to which the patch is posted
-patch_scale                = 0.2             # patch size
+patch_scale                = 0.22             # patch size
 max_labels_per_img         = 14              # maximum number of objects per image
 patch_mode                 = 0              # options: 0(patch), 1(white), 2(gray), 3(random)
 # fake_images_path           = "../adversarial-attack-ensemble/patch_sample/3output.png"
@@ -251,10 +253,12 @@ if(model_name == "fasterrcnn"):
     # just use fasterrcnn directly
     detector = None
 if(model_name == "yolov8"):
-    detectorYolov8 = YOLO("yolov8n.pt")
+    print(f"[i] Using model size: YOLOv8{model_size}")
+    detectorYolov8 = YOLO(f"yolov8{model_size}.pt")
     detector = detectorYolov8
 if(model_name == "yolov5"):
-    detectorYolov5 = YOLO("yolov5n.pt")
+    print(f"[i] Using model size: YOLOv5{model_size}")
+    detectorYolov5 = YOLO(f"yolov5{model_size}.pt")
     detector = detectorYolov5
 
 
@@ -521,5 +525,8 @@ print(fake_images_path)
 if yolo_tiny==True and model_name!='yolov2':
     model_name = model_name+'_tiny'
 print(model_name)
+
+if model_name in ["yolov5", "yolov8"]:
+    print("Size: ", model_size)
 print('================ finish ================\n\n')
 
