@@ -51,10 +51,10 @@ class MaxProbExtractor(torch.nn.Module):
         return max_conf_target_obj_cls
 
 class DetectorYolov4():
-    def __init__(self, cfgfile='./pytorchYOLOv4/cfg/yolov4.cfg', weightfile='./pytorchYOLOv4/weight/yolov4.weights', show_detail=False, tiny=False):
+    def __init__(self, cfgfile='pytorchYOLOv4/cfg/yolov4.cfg', weightfile='pytorchYOLOv4/weight/yolov4.weights', show_detail=False, tiny=False):
         if tiny:
-            cfgfile    = './pytorchYOLOv4/cfg/yolov4-tiny.cfg'
-            weightfile = './pytorchYOLOv4/weight/yolov4-tiny.weights'
+            cfgfile    = 'pytorchYOLOv4/cfg/yolov4-tiny.cfg'
+            weightfile = 'pytorchYOLOv4/weight/yolov4-tiny.weights'
         self.show_detail = show_detail
         if(self.show_detail):
             start_init        = time.time()
@@ -263,13 +263,13 @@ def detect_skimage(cfgfile, weightfile, imgfile):
 
 def get_args():
     parser = argparse.ArgumentParser('Test your image or video by trained model.')
-    parser.add_argument('-cfgfile', type=str, default='./cfg/yolov4.cfg',
+    parser.add_argument('-cfgfile', type=str, default='cfg/yolov4.cfg',
                         help='path of cfg file', dest='cfgfile')
     parser.add_argument('-weightfile', type=str,
-                        default='./checkpoints/Yolov4_epoch1.pth',
+                        default='checkpoints/Yolov4_epoch1.pth',
                         help='path of trained model.', dest='weightfile')
     parser.add_argument('-imgfile', type=str,
-                        default='./data/mscoco2017/train2017/190109_180343_00154162.jpg',
+                        default='data/mscoco2017/train2017/190109_180343_00154162.jpg',
                         help='path of your image file.', dest='imgfile')
     args = parser.parse_args()
 

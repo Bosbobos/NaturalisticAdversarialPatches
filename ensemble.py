@@ -57,6 +57,7 @@ def main():
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     Gparser.add_argument('--epochs', default=1000, type=int, help='number of training epochs')
     Gparser.add_argument('--weight_loss_tv', default=0.0, type=float, help='weight of the tv loss')
+    Gparser.add_argument('--learning_rate', default=0.02, type=float, help='optimizer learning rate')
     apt = Gparser.parse_known_args()[0]
     print(apt)
     print()
@@ -91,7 +92,7 @@ def main():
     n_epochs = apt.epochs
 
     start_epoch           = 1         # from what epoch to start training
-    learning_rate         = 0.02      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
+    learning_rate         = apt.learning_rate      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
     epoch_save            = 10001       # from how many A to save a checkpoint
     cls_id_attacked       = 0         # the class attacked. (0: person). List: https://gist.github.com/AruniRC/7b3dadd004da04c80198557db5da4bda
     cls_id_generation     = apt.classBiggan       # the class generated at patch. (259: pomeranian) List: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
@@ -101,7 +102,7 @@ def main():
     # parameters of BigGAN
     enable_shift_deformator           = False   # True: patch = G(deformator(z))  /  False: patch = G(z) 
     enable_human_annotated_directions = False   # True: only vectors that annotated by human  /   False: all latent vectors
-    max_value_latent_item             = 50       # the max value of latent vectors
+    max_value_latent_item             = 10       # the max value of latent vectors
     enable_latent_clipping            = False    # added by kung. To clip the latent code when optimize
     # pre-trained checkpoint
     checkpoint_path       = "checkpoint/gan_params_10.pt"        # if "retrain_gan" equal "True", and then use this path.
@@ -145,7 +146,7 @@ def main():
         if(yolo_tiny):
             label_folder_name = label_folder_name + 'tiny'
     if model_name in ("yolov8", "yolov5"):
-        label_folder_name = 'yolo-labels_yolov4' # TODO: Relabel the dataset for YOLOv8?
+        label_folder_name = 'yolo-labels_yolov4tiny' # TODO: Relabel the dataset for YOLOv8?
         
     print(f"label folder name: {label_folder_name}")
 
@@ -243,33 +244,33 @@ def main():
         detectorYolov2 = DetectorYolov2(show_detail=False)
         detector = detectorYolov2
         batch_size_second      = 8
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
         # # ORIGIN
         # detector = PatchTrainer("paper_obj")
     if(model_name == "yolov3"):
         detectorYolov3 = DetectorYolov3(show_detail=False, tiny=yolo_tiny)
         detector = detectorYolov3
         batch_size_second      = 16
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second  = 4
     if(model_name == "yolov4"):
         detectorYolov4   = DetectorYolov4(show_detail=False, tiny=yolo_tiny)
         detector = detectorYolov4
         batch_size_second      = 16
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second=1
     if(model_name == "yolov8"):
         detectorYolov8 = YOLO("yolov8n.pt")
         detector = detectorYolov8
         batch_size_second      = 16
-        learning_rate          = 0.005
+        # learning_rate          = 0.005
     if(model_name == "yolov5"):
-        detectorYolov5 = YOLO("yolov5n.pt")
+        detectorYolov5 = YOLO("yolov5s.pt")
         detector = detectorYolov5
-        batch_size_second      = 16
-        learning_rate          = 0.005
+        batch_size_second      = 8
+        # learning_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
         batch_size_second = 8
