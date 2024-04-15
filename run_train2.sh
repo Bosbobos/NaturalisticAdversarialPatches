@@ -63,4 +63,7 @@
 # docker run --gpus all --shm-size=4g -v "/home/tfg-dlg/tfg/NaturalisticAdversarialPatchYOLOv8/dataset:/usr/src/app/dataset" -v "/home/tfg-dlg/tfg/NaturalisticAdversarialPatchYOLOv8/exp:/usr/src/app/exp" -it naturalistic-adversarial-patch python ensemble.py --seed 12345 --model yolov4 --tiny --classBiggan 259 --epochs 1000 --weight_loss_tv 0.05 --learning_rate 0.005
 
 # exp44
-docker run --gpus all --shm-size=4g -v "/home/tfg-dlg/tfg/NaturalisticAdversarialPatchYOLOv8/dataset:/usr/src/app/dataset" -v "/home/tfg-dlg/tfg/NaturalisticAdversarialPatchYOLOv8/exp:/usr/src/app/exp" -it naturalistic-adversarial-patch python ensemble.py --seed 12345 --model yolov5 --classBiggan 367 --epochs 500 --weight_loss_tv 0.0 --learning_rate 0.0025
+# docker run --gpus all --shm-size=4g -v "/home/tfg-dlg/tfg/NaturalisticAdversarialPatchYOLOv8/dataset:/usr/src/app/dataset" -v "/home/tfg-dlg/tfg/NaturalisticAdversarialPatchYOLOv8/exp:/usr/src/app/exp" -it naturalistic-adversarial-patch python ensemble.py --seed 12345 --model yolov5 --classBiggan 367 --epochs 500 --weight_loss_tv 0.0 --learning_rate 0.0025
+
+# exp32 repeat
+docker run --gpus all --shm-size=4g -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/dataset:/usr/src/app/dataset" -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/exp:/usr/src/app/exp" -it naturalistic-adversarial-patch python ensemble.py --seed 12345 --model yolov5m --classBiggan 259 --epochs 1000 --weight_loss_tv 0.1 --learning_rate 0.005

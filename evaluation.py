@@ -11,7 +11,7 @@ import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 from torchvision.utils import make_grid, save_image
 from PIL import Image, ImageDraw, ImageFont
-import matplotlib.image as mpimg 
+import matplotlib.image as mpimg
 import time
 from tqdm import tqdm
 from torch import autograd
@@ -37,7 +37,7 @@ import argparse
 
 ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
 Gparser = argparse.ArgumentParser(description='Advpatch evaluation')
-Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, fasterrcnn')
+Gparser.add_argument('--model', default='yolov5n', type=str, help='options : yolov2, yolov3, yolov4, fasterrcnn')
 Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
 Gparser.add_argument('--patch', default='', help='patch location')
 Gparser.add_argument('--model_size', default='n', help='model size')
@@ -49,25 +49,25 @@ print()
 ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
 model_name                 = apt1.model        # yolov4, yolov3, yolov2, fasterrcnn
 yolo_tiny                  = apt1.tiny            # only yolov4, yolov3
-model_size = apt1.model_size
+# model_size = apt1.model_size
 by_rectangle               = True
 # transformation options
-enable_rotation            = False 
+enable_rotation            = False
 enable_randomLocation      = False
 enable_crease              = False
-enable_projection          = False 
-enable_rectOccluding       = False 
-enable_blurred             = False 
+enable_projection          = False
+enable_rectOccluding       = False
+enable_blurred             = False
 # output images with bbox
-enable_with_bbox           = True            # outputs with bbox 
+enable_with_bbox           = True            # outputs with bbox
 # other setting
 enable_show_plt            = False           # check output images during testing by human
 enable_no_random           = True            # NOT random patch "light and shadow changes"
 enable_check_patch         = False           # check input patch by human
 # patch
 cls_id_attacked            = 0               # ID of the object to which the patch is posted
-patch_scale                = 0.22             # patch size
-max_labels_per_img         = 14              # maximum number of objects per image
+patch_scale                = 0.2             # patch size
+max_labels_per_img         = 19              # maximum number of objects per image
 patch_mode                 = 0              # options: 0(patch), 1(white), 2(gray), 3(random)
 # fake_images_path           = "../adversarial-attack-ensemble/patch_sample/3output.png"
 # fake_images_path           = "../adversarial-attack-ensemble/exp/exp07/generated/generated-images-1000.png"
@@ -91,8 +91,11 @@ else:
 label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_"+sss
 enable_show_map_process    = False
 
-if model_name in ("yolov8", "yolov5"):
-    label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_yolov4"
+# if model_name in ("yolov8", "yolov5"):
+#     label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_yolov4"
+
+# if model_name == "yolov5" and model_size == "m":
+#     label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_yolov5m"
 
 # sss = sss+'_'+fake_images_path[35:40] # -6:-4
 temp_f = fake_images_path.split('/')[2]
@@ -118,7 +121,7 @@ enable_output_data         = True            # options:  True (output bbox label
 ### ----------------------------------------------------------- Initialization ---------------------------------------------------------------------- ###
 # init
 plt2tensor = transforms.Compose([
-        transforms.ToTensor()]) 
+        transforms.ToTensor()])
 device = get_default_device()
 
 # init output folder name
@@ -135,12 +138,18 @@ elif(model_name == "yolov3"):
 elif(model_name == "yolov4"):
     output_labels_folder        = output_labels_folder[:-1] + "_yolov4" + tiny_str + output_labels_folder[-1]
     outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov4" + tiny_str + output_labels_folder[-1]
-elif(model_name == "yolov8"):
-    output_labels_folder        = output_labels_folder[:-1] + "_yolov8" + tiny_str + output_labels_folder[-1]
-    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov8" + tiny_str + output_labels_folder[-1]
-elif(model_name == "yolov5"):
-    output_labels_folder        = output_labels_folder[:-1] + "_yolov5" + tiny_str + output_labels_folder[-1]
-    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov5" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov8n"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov8n" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov8n" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov5n"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov5n" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov5n" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov5s"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov5s" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov5s" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov5m"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov5m" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov5m" + tiny_str + output_labels_folder[-1]
 elif(model_name == "fasterrcnn"):
     output_labels_folder        = output_labels_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
     outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
@@ -148,7 +157,7 @@ elif(model_name == "fasterrcnn"):
 # init cls_conf_threshold
 # options:  Test (labels-rescale contain [confidence])    /    Train (labels-rescale doesn't contain [confidence])
 if(output_mode == 1):
-    output_data_type = "Test"          
+    output_data_type = "Test"
 elif(output_mode == 0):
     output_data_type = "Train"
 if(output_data_type == "Train"):
@@ -195,7 +204,7 @@ if(source_key == 0):
     output_name = [video_name]
 elif(source_key == 1):
     # read images
-    print("Start to read images from folder")
+    print("Start to read images from folder: "+source_folder)
     images = []
     filenames = []
     for filename in os.listdir(source_folder):
@@ -212,14 +221,14 @@ print('Finish reading images in %f seconds.' % (finish_r - start_r))
 
 
 ### -----------------------------------------------------------  Patch  Image  ---------------------------------------------------------------------- ###
-# Read patch image 
+# Read patch image
 fake_images_input = Image.open(fake_images_path).convert('RGB')
-f_width, f_height = fake_images_input.size  
+f_width, f_height = fake_images_input.size
 new_side = max(f_width, f_height)
-newsize = (new_side, new_side) 
-fake_images_input = fake_images_input.resize(newsize) 
+newsize = (new_side, new_side)
+fake_images_input = fake_images_input.resize(newsize)
 if(enable_check_patch):
-    # Ckeck Images 
+    # Ckeck Images
     fake_images_input.show()
 # plt to tensor
 plt2tensor = transforms.Compose([
@@ -252,14 +261,16 @@ if(model_name == "yolov4"):
 if(model_name == "fasterrcnn"):
     # just use fasterrcnn directly
     detector = None
-if(model_name == "yolov8"):
-    print(f"[i] Using model size: YOLOv8{model_size}")
-    detectorYolov8 = YOLO(f"yolov8{model_size}.pt")
-    detector = detectorYolov8
-if(model_name == "yolov5"):
-    print(f"[i] Using model size: YOLOv5{model_size}")
-    detectorYolov5 = YOLO(f"yolov5{model_size}.pt")
-    detector = detectorYolov5
+if("yolov5" in model_name or "yolov8" in model_name):
+    detector = YOLO(model_name+".pt")
+# if(model_name == "yolov8"):
+#     print(f"[i] Using model size: YOLOv8{model_size}")
+#     detectorYolov8 = YOLO(f"yolov8{model_size}.pt")
+#     detector = detectorYolov8
+# if(model_name == "yolov5"):
+#     print(f"[i] Using model size: YOLOv5{model_size}")
+#     detectorYolov5 = YOLO(f"yolov5{model_size}.pt")
+#     detector = detectorYolov5
 
 
 ### -----------------------------------------------------------  Output Video  ---------------------------------------------------------------------- ###
@@ -291,7 +302,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
         max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=imm_tensor, cls_id_attacked=cls_id_attacked, with_bbox=True)
     if(model_name == "fasterrcnn"):
         max_prob, max_prob, bboxes = FasterrcnnResnet50(tensor_image_inputs=imm_tensor, device=device, cls_id_attacked=cls_id_attacked, threshold=0.5)
-    if model_name in ("yolov8", "yolov5"):
+    if "yolov5" in model_name or "yolov8" in model_name:
         bboxes = detector(imm_tensor)
 
     # add patch
@@ -331,7 +342,8 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                 labels_rescale.append(label_rescale)
         labels = np.array(labels)
         labels_rescale = np.array(labels_rescale)
-    elif model_name in ("yolov8", "yolov5"):
+    elif "yolov5" in model_name or "yolov8" in model_name:
+    # elif model_name in ("yolov8", "yolov5"):
         for b in bbox.boxes:
             detected_class = int(b.cls.cpu().item())
             orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
@@ -376,7 +388,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
             labels_rescale = labels_rescale_sorted[:max_labels_per_img]
         else:
             labels         = labels[:, 0:5] # without conf_obj
-    
+
     # set output name
     if(len(output_name) == 1):
         iname = output_name[0]+"_"+str(i)
@@ -406,7 +418,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                                                         , patch_mode=patch_mode
                                                         , enable_no_random = enable_no_random
                                                         , fake_images_default = fake_images_input)
-                                                                
+
         img_output = p_img_batch
         if not(enable_clear_output):
             # get bbox label.
@@ -435,7 +447,16 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         labels_rescale.append(label_rescale)
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
-            elif model_name in ("yolov8", "yolov5"):
+            # elif model_name in ("yolov8", "yolov5"):
+            elif "yolov5" in model_name or "yolov8" in model_name:
+
+                # WARNING: This is hardcoded to label the dataset
+                # output_dir = f"dataset/inria/Test/pos/yolo-labels-rescale_{model_name}/"
+                # output_dir = f"dataset/inria/Train/pos/yolo-labels_{model_name}/"
+                # label_file = iname + ".txt"
+                # label_path = os.path.join(output_dir, label_file)
+                # with open(label_path, 'w') as f:
+                # ENDWARNING
                 for b in bbox.boxes:
                     detected_class = int(b.cls.cpu().item())
                     orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
@@ -462,6 +483,12 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         label_rescale = np.array(
                             [detected_class, conf, left, top, right, bottom], dtype=np.float32
                         )
+
+                        # WARNING: This is hardcoded to label the dataset
+                        # f.write(f"person {left} {top} {right} {bottom}\n")
+                        # f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n")
+                        # ENDWARNING
+
                         labels_rescale.append(label_rescale)
 
                 labels = np.array(labels)
@@ -480,7 +507,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                     labels_rescale = labels_rescale_sorted[:max_labels_per_img]
                 else:
                     labels         = labels[:, 0:5] # without conf_obj
-    
+
     # output data
     if(enable_output_data):
         # save clear imgs
@@ -507,15 +534,15 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
     img_output = img_output.astype(np.uint8)
     video_writer.append_data(img_output)
 video_writer.close()
-# 
+#
 # st()
 # MAP
 if(enable_count_map):
     if not(enable_show_map_process):
         output_imgs_folder=None
     # st()
-    output_map = eval_map.count(path_ground_truth=label_labelRescale_folder, 
-                                path_detection_results=outout_labelRescale_folder, 
+    output_map = eval_map.count(path_ground_truth=label_labelRescale_folder,
+                                path_detection_results=outout_labelRescale_folder,
                                 path_images_optional=output_imgs_folder)
     # save
     # with open("./"+output_folder+"map.txt", "w") as text_file:
@@ -526,7 +553,7 @@ if yolo_tiny==True and model_name!='yolov2':
     model_name = model_name+'_tiny'
 print(model_name)
 
-if model_name in ["yolov5", "yolov8"]:
-    print("Size: ", model_size)
+# if model_name in ["yolov5", "yolov8"]:
+    # print("Size: ", model_size)
 print('================ finish ================\n\n')
 

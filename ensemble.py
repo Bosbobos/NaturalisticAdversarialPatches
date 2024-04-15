@@ -52,7 +52,7 @@ def main():
     ### -----------------------------------------------------------    Setting     ---------------------------------------------------------------------- ###
     Gparser = argparse.ArgumentParser(description='Advpatch Training')
     Gparser.add_argument('--seed', default='15089',type=int, help='choose seed') 
-    Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, yolov5, yolov8, fasterrcnn')
+    Gparser.add_argument('--model', default='yolov5', type=str, help='options : yolov2, yolov3, yolov4, yolov5n, yolov5s, yolov5m, yolov8n, fasterrcnn')
     Gparser.add_argument('--classBiggan', default=259, type=int, help='class in big gan') # 84:peacock, 294:brownbear, 145:penguin
     Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
     Gparser.add_argument('--epochs', default=1000, type=int, help='number of training epochs')
@@ -146,7 +146,7 @@ def main():
         if(yolo_tiny):
             label_folder_name = label_folder_name + 'tiny'
     if model_name in ("yolov8", "yolov5"):
-        label_folder_name = 'yolo-labels_yolov4tiny' # TODO: Relabel the dataset for YOLOv8?
+        label_folder_name = 'yolo-labels_' + str(model_name)
         
     print(f"label folder name: {label_folder_name}")
 
@@ -261,15 +261,18 @@ def main():
         # learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second=1
-    if(model_name == "yolov8"):
-        detectorYolov8 = YOLO("yolov8n.pt")
-        detector = detectorYolov8
-        batch_size_second      = 16
-        # learning_rate          = 0.005
-    if(model_name == "yolov5"):
-        detectorYolov5 = YOLO("yolov5s.pt")
-        detector = detectorYolov5
+    if("yolov5" in model_name or "yolov8" in model_name):
+        detector = YOLO(model_name+".pt")
         batch_size_second      = 8
+    # if(model_name == "yolov8"):
+    #     detectorYolov8 = YOLO("yolov8n.pt")
+    #     detector = detectorYolov8
+    #     batch_size_second      = 16
+        # learning_rate          = 0.005
+    # if(model_name == "yolov5"):
+    #     detectorYolov5 = YOLO("yolov5s.pt")
+    #     detector = detectorYolov5
+    #     batch_size_second      = 8
         # learning_rate          = 0.005
     if(model_name == "fasterrcnn"):
         # just use fasterrcnn directly
@@ -290,7 +293,7 @@ def main():
         # batch_size_second      = 8
         train_loader_second = torch.utils.data.DataLoader(InriaDataset(img_dir='./dataset/inria/Train/pos', 
                                                                 lab_dir='./dataset/inria/Train/pos/'+str(label_folder_name), 
-                                                                max_lab=14,
+                                                                max_lab=20,
                                                                 imgsize=ds_image_size_second,
                                                                 shuffle=True),
                                                     batch_size=batch_size_second,
@@ -303,7 +306,7 @@ def main():
         batch_size_second      = 16
         train_loader_second = torch.utils.data.DataLoader(InriaDataset(img_dir='./dataset/inria/Test/pos', 
                                                                 lab_dir='./dataset/inria/Train/pos/'+str(label_folder_name), 
-                                                                max_lab=14,
+                                                                max_lab=20,
                                                                 imgsize=ds_image_size_second,
                                                                 shuffle=True),
                                                     batch_size=batch_size_second,
