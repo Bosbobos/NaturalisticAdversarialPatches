@@ -40,7 +40,7 @@ Gparser = argparse.ArgumentParser(description='Advpatch evaluation')
 Gparser.add_argument('--model', default='yolov5n', type=str, help='options : yolov2, yolov3, yolov4, fasterrcnn')
 Gparser.add_argument('--tiny', action='store_true', help='options :True or False')
 Gparser.add_argument('--patch', default='', help='patch location')
-Gparser.add_argument('--model_size', default='n', help='model size')
+# Gparser.add_argument('--model_size', default='n', help='model size')
 apt1, unpar = Gparser.parse_known_args()
 print(apt1)
 print()
@@ -428,6 +428,13 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                 ## ONLY batch_size = 1
                 bbox = bboxes[0]
             if(model_name == "yolov3" or model_name == "yolov4" or model_name == "fasterrcnn"):
+                # WARNING: This is hardcoded to label the dataset
+                # output_dir = f"dataset/inria/Test/pos/yolo-labels-rescale_{model_name}tiny/"
+                # output_dir = f"dataset/inria/Train/pos/yolo-labels_{model_name}/"
+                # label_file = iname + ".txt"
+                # label_path = os.path.join(output_dir, label_file)
+                # with open(label_path, 'w') as f:
+                # ENDWARNING
                 for b in bbox:
                     if (int(b[-1]) == int(cls_id_attacked)):
                         label          = np.array([b[-1], (b[0]+b[2])/2.0, (b[1]+b[3])/2.0, (b[2]-b[0]), (b[3]-b[1]), b[4]], dtype=np.float32)
@@ -435,8 +442,15 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         b[:-3] = b[:-3] * img_side
                         label_rescale  = np.array([b[-1], b[-2], b[0], b[1], b[2], b[3]], dtype=np.float32)
                         labels_rescale.append(label_rescale)
+                        
+                        # WARNING: This is hardcoded to label the dataset
+                        # f.write(f"person {left} {top} {right} {bottom}\n")
+                        # f.write(f"person {b[0]} {b[1]} {b[2]} {b[3]}\n")
+                        # ENDWARNING
+                        
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
+                    
             elif(model_name == "yolov2"):
                 for b in bbox:
                     if (int(b[-1]) == int(cls_id_attacked)):
@@ -485,8 +499,8 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         )
 
                         # WARNING: This is hardcoded to label the dataset
-                        # f.write(f"person {left} {top} {right} {bottom}\n")
-                        # f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n")
+                        # f.write(f"person {left} {top} {right} {bottom}\n") # Train
+                        # f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n") # Test
                         # ENDWARNING
 
                         labels_rescale.append(label_rescale)
@@ -551,9 +565,8 @@ if(enable_count_map):
 print(fake_images_path)
 if yolo_tiny==True and model_name!='yolov2':
     model_name = model_name+'_tiny'
-print(model_name)
 
-# if model_name in ["yolov5", "yolov8"]:
-    # print("Size: ", model_size)
+print(f"Model used: {model_name}")
+
 print('================ finish ================\n\n')
 

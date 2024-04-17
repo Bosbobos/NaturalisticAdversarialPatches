@@ -31,10 +31,10 @@ def count(path_ground_truth, path_detection_results, path_images_optional=None):
         |  (Left,Top)
         |      *_________
         |      |         |
-                |         |
+               |         |
         y      |_________|
-    (height)            *
-                    (Right,Bottom)
+    (height)             *
+                     (Right,Bottom)
     '''
 
     # if there are no classes to ignore then replace None by empty list

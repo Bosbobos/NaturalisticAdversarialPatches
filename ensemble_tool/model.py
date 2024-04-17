@@ -217,7 +217,7 @@ def eval_rowPtach(generator, batch_size, device
                             top         = int(box[1] * img_height)
                             bottom      = int(box[3] * img_height)
                         # elif model_name in ("yolov8", "yolov5"):
-                        if ("yolov5" in model_name or "yolov8" in model_name):
+                        elif ("yolov5" in model_name or "yolov8" in model_name):
                             left, top, right, bottom = (
                                 int(box.xyxy[0][0].cpu().item()),
                                 int(box.xyxy[0][1].cpu().item()),
@@ -225,7 +225,7 @@ def eval_rowPtach(generator, batch_size, device
                                 int(box.xyxy[0][3].cpu().item()),
                             )
                         else:
-                            raise Exception("Model not implemented")
+                            raise Exception("Model not implemented: "+model_name)
                         # img with prediction
                         draw = ImageDraw.Draw(img_pil)
                         shape = [left, top, right, bottom]
