@@ -150,7 +150,7 @@ def eval_rowPtach(generator, batch_size, device
             # no loss_overlap
             loss_overlap = torch.tensor(0.0).to(device)
         # elif model_name in ("yolov8", "yolov5"):
-        elif ("yolov5" in model_name or "yolov8" in model_name):
+        elif ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
             bboxes = detector(p_img_batch, verbose=False)
             combined_probs = []
             for box in bboxes[0].boxes:
@@ -185,14 +185,14 @@ def eval_rowPtach(generator, batch_size, device
             # sample first image
             # print("bbox : "+str(bbox))
             # if model_name in ("yolov8", "yolov5"):
-            if ("yolov5" in model_name or "yolov8" in model_name):
+            if ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
                 bbox = bboxes[b].boxes
             else:
                 bbox = bboxes[b]
             for box in bbox:
                 # print("box size : "+str(box.size()))
                 # if model_name in ("yolov8", "yolov5"):
-                if ("yolov5" in model_name or "yolov8" in model_name):
+                if ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
                     cls_id = box.cls.int()
                     cls_name = class_names[cls_id]
                     cls_conf = box.conf
@@ -217,7 +217,7 @@ def eval_rowPtach(generator, batch_size, device
                             top         = int(box[1] * img_height)
                             bottom      = int(box[3] * img_height)
                         # elif model_name in ("yolov8", "yolov5"):
-                        elif ("yolov5" in model_name or "yolov8" in model_name):
+                        elif ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
                             left, top, right, bottom = (
                                 int(box.xyxy[0][0].cpu().item()),
                                 int(box.xyxy[0][1].cpu().item()),
@@ -389,7 +389,7 @@ def train_rowPtach(method_num, generator
                 loss_overlap = torch.tensor(0.0).to(device)
             # elif model_name in ("yolov8", "yolov5"):
             # elif "yolov" in model_name:
-            elif ("yolov5" in model_name or "yolov8" in model_name):
+            elif ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
                 bboxes = detector(p_img_batch, verbose=False)
                 combined_probs = []
                 for box in bboxes[0].boxes:
@@ -459,7 +459,7 @@ def train_rowPtach(method_num, generator
                             top         = int(box[1] * img_height)
                             bottom      = int(box[3] * img_height)
                         # elif model_name in ("yolov8", "yolov5"):
-                        elif ("yolov5" in model_name or "yolov8" in model_name):
+                        elif ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
                             left, top, right, bottom = (
                                 int(box.xyxy[0][0].cpu().item()),
                                 int(box.xyxy[0][1].cpu().item()),

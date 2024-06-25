@@ -68,7 +68,7 @@ enable_check_patch         = False           # check input patch by human
 cls_id_attacked            = 0               # ID of the object to which the patch is posted
 patch_scale                = 0.2             # patch size
 max_labels_per_img         = 19              # maximum number of objects per image
-patch_mode                 = 0              # options: 0(patch), 1(white), 2(gray), 3(random)
+patch_mode                 = 1              # options: 0(patch), 1(white), 2(gray), 3(random)
 # fake_images_path           = "../adversarial-attack-ensemble/patch_sample/3output.png"
 # fake_images_path           = "../adversarial-attack-ensemble/exp/exp07/generated/generated-images-1000.png"
 fake_images_path = apt1.patch
@@ -96,6 +96,9 @@ enable_show_map_process    = False
 
 # if model_name == "yolov5" and model_size == "m":
 #     label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_yolov5m"
+
+# if model_name == "yolov9" or model_name == "yolov10":
+#     label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_yolov8n"
 
 # sss = sss+'_'+fake_images_path[35:40] # -6:-4
 temp_f = fake_images_path.split('/')[2]
@@ -150,6 +153,27 @@ elif(model_name == "yolov5s"):
 elif(model_name == "yolov5m"):
     output_labels_folder        = output_labels_folder[:-1] + "_yolov5m" + tiny_str + output_labels_folder[-1]
     outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov5m" + tiny_str + output_labels_folder[-1]
+
+elif(model_name == "yolov9n"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov9n" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov9n" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov9s"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov9s" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov9s" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov9m"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov9m" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov9m" + tiny_str + output_labels_folder[-1]
+
+elif(model_name == "yolov10n"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov10n" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov10n" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov10s"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov10s" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov10s" + tiny_str + output_labels_folder[-1]
+elif(model_name == "yolov10m"):
+    output_labels_folder        = output_labels_folder[:-1] + "_yolov10m" + tiny_str + output_labels_folder[-1]
+    outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_yolov10m" + tiny_str + output_labels_folder[-1]
+
 elif(model_name == "fasterrcnn"):
     output_labels_folder        = output_labels_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
     outout_labelRescale_folder = outout_labelRescale_folder[:-1] + "_fasterrcnn" + tiny_str + output_labels_folder[-1]
@@ -261,7 +285,7 @@ if(model_name == "yolov4"):
 if(model_name == "fasterrcnn"):
     # just use fasterrcnn directly
     detector = None
-if("yolov5" in model_name or "yolov8" in model_name):
+if("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
     detector = YOLO(model_name+".pt")
 # if(model_name == "yolov8"):
 #     print(f"[i] Using model size: YOLOv8{model_size}")
@@ -302,7 +326,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
         max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=imm_tensor, cls_id_attacked=cls_id_attacked, with_bbox=True)
     if(model_name == "fasterrcnn"):
         max_prob, max_prob, bboxes = FasterrcnnResnet50(tensor_image_inputs=imm_tensor, device=device, cls_id_attacked=cls_id_attacked, threshold=0.5)
-    if "yolov5" in model_name or "yolov8" in model_name:
+    if "yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name:
         bboxes = detector(imm_tensor)
 
     # add patch
@@ -342,7 +366,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                 labels_rescale.append(label_rescale)
         labels = np.array(labels)
         labels_rescale = np.array(labels_rescale)
-    elif "yolov5" in model_name or "yolov8" in model_name:
+    elif "yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name:
     # elif model_name in ("yolov8", "yolov5"):
         for b in bbox.boxes:
             detected_class = int(b.cls.cpu().item())
@@ -462,7 +486,7 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
             # elif model_name in ("yolov8", "yolov5"):
-            elif "yolov5" in model_name or "yolov8" in model_name:
+            elif "yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name:
 
                 # WARNING: This is hardcoded to label the dataset
                 # output_dir = f"dataset/inria/Test/pos/yolo-labels-rescale_{model_name}/"
@@ -499,8 +523,8 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         )
 
                         # WARNING: This is hardcoded to label the dataset
-                        # f.write(f"person {left} {top} {right} {bottom}\n") # Train
-                        # f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n") # Test
+                        # f.write(f"person {left} {top} {right} {bottom}\n") # Test
+                        # f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n") # Train
                         # ENDWARNING
 
                         labels_rescale.append(label_rescale)

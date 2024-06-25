@@ -261,7 +261,7 @@ def main():
         # learning_rate          = 0.005
         if yolo_tiny==False:
             batch_size_second=1
-    if("yolov5" in model_name or "yolov8" in model_name):
+    if("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
         detector = YOLO(model_name+".pt")
         batch_size_second      = 8
     # if(model_name == "yolov8"):
