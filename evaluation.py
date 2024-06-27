@@ -66,7 +66,7 @@ enable_no_random           = True            # NOT random patch "light and shado
 enable_check_patch         = False           # check input patch by human
 # patch
 cls_id_attacked            = 0               # ID of the object to which the patch is posted
-patch_scale                = 0.0             # patch size
+patch_scale                = 0.2             # patch size
 max_labels_per_img         = 19              # maximum number of objects per image
 patch_mode                 = 0              # options: 0(patch), 1(white), 2(gray), 3(random)
 # fake_images_path           = "../adversarial-attack-ensemble/patch_sample/3output.png"
@@ -78,7 +78,7 @@ fake_images_path = apt1.patch
 # data source
 video_name                 = "WIN_20210113_18_36_46_Pro"     # WIN_20200903_16_52_27_Pro, WIN_20200903_17_17_34_Pro, WIN_20210113_18_36_46_Pro
 video_folder               = "./dataset/video/"
-source_folder              = "./dataset/inria/Train/pos/"    # ../dataset/inria/Train/pos/   ,   ../dataset/inria/Test/pos/
+source_folder              = "./dataset/inria/Test/pos/"    # ../dataset/inria/Train/pos/   ,   ../dataset/inria/Test/pos/
 # video or folder
 source_key                 = 1     # 1:inria     0:video
 
@@ -490,44 +490,44 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
 
                 # WARNING: This is hardcoded to label the dataset
                 # output_dir = f"dataset/inria/Test/pos/yolo-labels-rescale_{model_name}/"
-                output_dir = f"dataset/inria/Train/pos/yolo-labels_{model_name}/"
-                label_file = iname + ".txt"
-                label_path = os.path.join(output_dir, label_file)
-                with open(label_path, 'w') as f:
+                # output_dir = f"dataset/inria/Train/pos/yolo-labels_{model_name}/"
+                # label_file = iname + ".txt"
+                # label_path = os.path.join(output_dir, label_file)
+                # with open(label_path, 'w') as f:
                 # ENDWARNING
-                    for b in bbox.boxes:
-                        detected_class = int(b.cls.cpu().item())
-                        orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
-                        if detected_class == int(cls_id_attacked):
-                            conf = b.conf.cpu().item()
-                            # For labels: using xywh format
-                            x_center, y_center, w, h = (
-                                b.xywh[0][0].cpu().item() / orig_width,
-                                b.xywh[0][1].cpu().item() / orig_height,
-                                b.xywh[0][2].cpu().item() / orig_width,
-                                b.xywh[0][3].cpu().item() / orig_height,
-                            )
-                            label = np.array(
-                                [detected_class, x_center, y_center, w, h, conf], dtype=np.float32
-                            )
-                            labels.append(label)
-                            # For labels_rescale: using xyxy format
-                            left, top, right, bottom = (
-                                b.xyxy[0][0].cpu().item(),
-                                b.xyxy[0][1].cpu().item(),
-                                b.xyxy[0][2].cpu().item(),
-                                b.xyxy[0][3].cpu().item(),
-                            )
-                            label_rescale = np.array(
-                                [detected_class, conf, left, top, right, bottom], dtype=np.float32
-                            )
+                for b in bbox.boxes:
+                    detected_class = int(b.cls.cpu().item())
+                    orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
+                    if detected_class == int(cls_id_attacked):
+                        conf = b.conf.cpu().item()
+                        # For labels: using xywh format
+                        x_center, y_center, w, h = (
+                            b.xywh[0][0].cpu().item() / orig_width,
+                            b.xywh[0][1].cpu().item() / orig_height,
+                            b.xywh[0][2].cpu().item() / orig_width,
+                            b.xywh[0][3].cpu().item() / orig_height,
+                        )
+                        label = np.array(
+                            [detected_class, x_center, y_center, w, h, conf], dtype=np.float32
+                        )
+                        labels.append(label)
+                        # For labels_rescale: using xyxy format
+                        left, top, right, bottom = (
+                            b.xyxy[0][0].cpu().item(),
+                            b.xyxy[0][1].cpu().item(),
+                            b.xyxy[0][2].cpu().item(),
+                            b.xyxy[0][3].cpu().item(),
+                        )
+                        label_rescale = np.array(
+                            [detected_class, conf, left, top, right, bottom], dtype=np.float32
+                        )
 
-                            # WARNING: This is hardcoded to label the dataset
-                            # f.write(f"person {left} {top} {right} {bottom}\n") # Test
-                            f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n") # Train
-                            # ENDWARNING
+                        # WARNING: This is hardcoded to label the dataset
+                        # f.write(f"person {left} {top} {right} {bottom}\n") # Test
+                        # f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n") # Train
+                        # ENDWARNING
 
-                            labels_rescale.append(label_rescale)
+                        labels_rescale.append(label_rescale)
 
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
