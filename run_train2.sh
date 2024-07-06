@@ -68,4 +68,4 @@
 # exp32 repeat
 # docker run --gpus all --shm-size=4g -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/dataset:/usr/src/app/dataset" -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/exp:/usr/src/app/exp" -it naturalistic-adversarial-patch python ensemble.py --seed 12345 --model yolov5m --classBiggan 259 --epochs 1000 --weight_loss_tv 0.1 --learning_rate 0.005
 
-docker run --gpus all --shm-size=4g -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/dataset:/usr/src/app/dataset" -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/exp:/usr/src/app/exp" -it naturalistic-adversarial-patch python ensemble.py --seed 12345 --model yolov8n --classBiggan 259 --epochs 1 --weight_loss_tv 0.1 --learning_rate 0.005
+docker run --gpus all --shm-size=4g -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/dataset:/usr/src/app/dataset" -v "C:/Users/danil/Desktop/Naturalistic-Adversarial-Patch/exp:/usr/src/app/exp" -it naturalistic-adversarial-patch python ensemble.py --seed 12345 --model yolov10n --classBiggan 259 --epochs 2 --weight_loss_tv 0.0 --learning_rate 0.01
