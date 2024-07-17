@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# List of identifiers
+patches=(
+    "exp25"
+    "exp27"
+    "exp8"
+    "exp9"
+    "exp29"
+    "exp6"
+    "exp7"
+    "exp10"
+    "exp11"
+    "exp12"
+    "exp13"
+    "exp14"
+    "exp15"
+    "exp16"
+    "exp17"
+    "exp26"
+    "exp28"
+    "exp30"
+    "exp32"
+    "exp35"
+    "exp36"
+    "exp39"
+    "exp40"
+    "exp41"
+    "exp44"
+    "exp32-v2"
+    "exp50"
+    "exp51"
+    "exp52"
+    "exp53"
+    "exp68"
+    "exp69"
+    "exp70"
+    "exp71"
+    "exp72"
+    "exp73"
+    "exp74"
+    "exp75"
+    "exp76"
+    "exp79"
+    "exp80"
+    "exp81"
+    "exp82"
+    "exp83"
+)
+
+# Iterate over each patch and run eval_patch.sh
+for patch in "${patches[@]}"; 
+do
+    ./eval_patch.sh "$patch"
+done
