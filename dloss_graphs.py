@@ -26,18 +26,18 @@ df3['Std Dev'] = df3['Value'].rolling(window=window_size).std()
 plt.figure(figsize=(14, 8), dpi=300)  # High resolution for publication
 
 # Plot with Learning Rate information
-plt.plot(df1['Step'], df1['Moving Average'], label='Patch30 (LR=0.01)', color='C0')
+plt.plot(df1['Step'], df1['Moving Average'], label='patch27 (LR=0.01)', color='C0')
 plt.fill_between(df1['Step'], df1['Moving Average'] - df1['Std Dev'], df1['Moving Average'] + df1['Std Dev'], color='C0', alpha=0.2)
 
-plt.plot(df2['Step'], df2['Moving Average'], label='Patch28 (LR=0.001)', color='C1')
+plt.plot(df2['Step'], df2['Moving Average'], label='patch25 (LR=0.001)', color='C1')
 plt.fill_between(df2['Step'], df2['Moving Average'] - df2['Std Dev'], df2['Moving Average'] + df2['Std Dev'], color='C1', alpha=0.2)
 
-plt.plot(df3['Step'], df3['Moving Average'], label='Patch19 (LR=0.005)', color='C2')
+plt.plot(df3['Step'], df3['Moving Average'], label='patch17 (LR=0.005)', color='C2')
 plt.fill_between(df3['Step'], df3['Moving Average'] - df3['Std Dev'], df3['Moving Average'] + df3['Std Dev'], color='C2', alpha=0.2)
 
-plt.title('Moving Average of Detection Loss in Adversarial Patch Training', fontsize=16)
+# plt.title('Moving Average of Detection Loss in Adversarial Patch Training', fontsize=16)
 plt.xlabel('Epochs', fontsize=14)
-plt.ylabel('Detection Loss', fontsize=14)
+plt.ylabel('Detection loss', fontsize=14)
 plt.legend(fontsize=12)
 plt.grid(True, linestyle='--', alpha=0.7)
 
