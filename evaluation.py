@@ -66,7 +66,7 @@ enable_no_random           = True            # NOT random patch "light and shado
 enable_check_patch         = False           # check input patch by human
 # patch
 cls_id_attacked            = 0               # ID of the object to which the patch is posted
-patch_scale                = 0.22             # patch size
+patch_scale                = 0.0             # patch size
 max_labels_per_img         = 19              # maximum number of objects per image
 patch_mode                 = 0              # options: 0(patch), 1(white), 2(gray), 3(random)
 # fake_images_path           = "../adversarial-attack-ensemble/patch_sample/3output.png"
@@ -78,7 +78,7 @@ fake_images_path = apt1.patch
 # data source
 video_name                 = "WIN_20210113_18_36_46_Pro"     # WIN_20200903_16_52_27_Pro, WIN_20200903_17_17_34_Pro, WIN_20210113_18_36_46_Pro
 video_folder               = "./dataset/video/"
-source_folder              = "./dataset/inria/Test/pos/"    # ../dataset/inria/Train/pos/   ,   ../dataset/inria/Test/pos/
+source_folder              = "./dataset/mpii/images/"   # "./dataset/inria/Test/pos/"    # ../dataset/inria/Train/pos/   ,   ../dataset/inria/Test/pos/
 # video or folder
 source_key                 = 1     # 1:inria     0:video
 
@@ -88,7 +88,8 @@ if yolo_tiny==True and model_name!="yolov2":
     sss = model_name+"tiny"
 else:
     sss=model_name
-label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_"+sss
+# label_labelRescale_folder = "./dataset/inria/Test/pos/yolo-labels-rescale_"+sss
+label_labelRescale_folder = "./dataset/mpii/labels/yolo-labels-rescale_"+sss
 enable_show_map_process    = False
 
 # if model_name in ("yolov8", "yolov5"):
@@ -228,19 +229,12 @@ if(source_key == 0):
     source_data = vid
     output_name = [video_name]
 elif(source_key == 1):
-    # read images
-    print("Start to read images from folder: "+source_folder)
-    images = []
-    filenames = []
-    for filename in os.listdir(source_folder):
-        if(filename.endswith('.jpg') or filename.endswith('.png') ):
-            image = imageio.imread(source_folder+filename)
-            images.append(image)
-            filenames.append(filename[:-4])
-    # number of frames
-    nframes     = len(images)
-    source_data = images
-    output_name = filenames
+    print("Start to read images from folder: " + source_folder)
+    filenames = [f for f in os.listdir(source_folder) if f.endswith('.jpg') or f.endswith('.png')]
+    filenames.sort()  # Optional: sort the filenames if order matters
+    nframes = len(filenames)
+    output_name = [f[:-4] for f in filenames]  # remove extension for naming
+
 finish_r = time.time()
 print('Finish reading images in %f seconds.' % (finish_r - start_r))
 
@@ -304,13 +298,14 @@ batch_size   = 1 # one by one
 if(fps == None):
     fps = 2
 video_writer = imageio.get_writer(output_video_foler + output_video_name + ".mp4", fps=fps)
-for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
-    # resize
-    # if i>3: break
+for i, filename in tqdm(enumerate(filenames), desc='Output video', total=nframes):
+    image_path = os.path.join(source_folder, filename)
+    imm = imageio.v2.imread(image_path)  # Load image on the fly
     imm = np.asarray(imm)
     img = Image.fromarray(imm, 'RGB')
-    img = img.resize((416,416))
-    # to tensor
+    img = img.resize((416, 416))
+    
+    # Convert image to tensor
     imm_tensor = plt2tensor(img).unsqueeze(0)
     imm_tensor = imm_tensor.to(device, torch.float)
     img_side   = imm_tensor.size()[-1]
@@ -486,49 +481,50 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
                         labels_rescale.append(label_rescale)
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
-            # elif model_name in ("yolov8", "yolov5"):
+                        # elif model_name in ("yolov8", "yolov5"):
             elif "yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name:
-
                 # WARNING: This is hardcoded to label the dataset
-                # output_dir = f"dataset/inria/Test/pos/yolo-labels-rescale_{model_name}/"
-                # output_dir = f"dataset/inria/Train/pos/yolo-labels_{model_name}/"
+                # output_dir = f"dataset/mpii/labels/yolo-labels-rescale_{model_name}/"
+                # os.makedirs(output_dir, exist_ok=True)
+                
                 # label_file = iname + ".txt"
                 # label_path = os.path.join(output_dir, label_file)
+                
+                # if not os.path.exists(label_path):
+                #     open(label_path, 'w').close()
+                
                 # with open(label_path, 'w') as f:
-                # ENDWARNING
-                for b in bbox.boxes:
-                    detected_class = int(b.cls.cpu().item())
-                    orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
-                    if detected_class == int(cls_id_attacked):
-                        conf = b.conf.cpu().item()
-                        # For labels: using xywh format
-                        x_center, y_center, w, h = (
-                            b.xywh[0][0].cpu().item() / orig_width,
-                            b.xywh[0][1].cpu().item() / orig_height,
-                            b.xywh[0][2].cpu().item() / orig_width,
-                            b.xywh[0][3].cpu().item() / orig_height,
-                        )
-                        label = np.array(
-                            [detected_class, x_center, y_center, w, h, conf], dtype=np.float32
-                        )
-                        labels.append(label)
-                        # For labels_rescale: using xyxy format
-                        left, top, right, bottom = (
-                            b.xyxy[0][0].cpu().item(),
-                            b.xyxy[0][1].cpu().item(),
-                            b.xyxy[0][2].cpu().item(),
-                            b.xyxy[0][3].cpu().item(),
-                        )
-                        label_rescale = np.array(
-                            [detected_class, conf, left, top, right, bottom], dtype=np.float32
-                        )
-
-                        # WARNING: This is hardcoded to label the dataset
-                        # f.write(f"person {left} {top} {right} {bottom}\n") # Test
-                        # f.write(f"{detected_class} {x_center} {y_center} {w} {h}\n") # Train
-                        # ENDWARNING
-
-                        labels_rescale.append(label_rescale)
+                if hasattr(bbox, 'boxes') and len(bbox.boxes) > 0:
+                    for b in bbox.boxes:
+                        detected_class = int(b.cls.cpu().item())
+                        orig_width, orig_height = bbox.boxes.orig_shape[1], bbox.boxes.orig_shape[0]
+                        if detected_class == int(cls_id_attacked):
+                            conf = b.conf.cpu().item()
+                            # For labels: using xywh format
+                            x_center, y_center, w, h = (
+                                b.xywh[0][0].cpu().item() / orig_width,
+                                b.xywh[0][1].cpu().item() / orig_height,
+                                b.xywh[0][2].cpu().item() / orig_width,
+                                b.xywh[0][3].cpu().item() / orig_height,
+                            )
+                            label = np.array(
+                                [detected_class, x_center, y_center, w, h, conf], dtype=np.float32
+                            )
+                            labels.append(label)
+                            # For labels_rescale: using xyxy format
+                            left, top, right, bottom = (
+                                b.xyxy[0][0].cpu().item(),
+                                b.xyxy[0][1].cpu().item(),
+                                b.xyxy[0][2].cpu().item(),
+                                b.xyxy[0][3].cpu().item(),
+                            )
+                            label_rescale = np.array(
+                                [detected_class, conf, left, top, right, bottom], dtype=np.float32
+                            )
+            
+                            # Write the detection to file
+                            # f.write(f"person {left} {top} {right} {bottom}\n")
+                            labels_rescale.append(label_rescale)
 
                 labels = np.array(labels)
                 labels_rescale = np.array(labels_rescale)
@@ -563,7 +559,8 @@ for i, imm in tqdm(enumerate(source_data), desc=f'Output video ',total=nframes):
             if(output_data_type == "Train"):
                 labelfile_rescale.write("person" + str(f' {bbox[2]} {bbox[3]} {bbox[4]} {bbox[5]}\n'))            # left, top, right, bottom
             elif(output_data_type == "Test"):
-                labelfile_rescale.write("person" + str(f' {bbox[1]} {bbox[2]} {bbox[3]} {bbox[4]} {bbox[5]}\n'))  # confendence left, top, right, bottom
+                # labelfile_rescale.write("person" + str(f' {bbox[1]} {bbox[2]} {bbox[3]} {bbox[4]} {bbox[5]}\n'))  # confendence left, top, right, bottom
+                labelfile_rescale.write("person" + str(f' {bbox[2]} {bbox[3]} {bbox[4]} {bbox[5]}\n'))  # left, top, right, bottom
         labelfile_rescale.close()
 
     # output video
