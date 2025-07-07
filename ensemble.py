@@ -291,8 +291,8 @@ def main():
     # InriaDataset
         ds_image_size_second   = 416
         # batch_size_second      = 8
-        train_loader_second = torch.utils.data.DataLoader(InriaDataset(img_dir='./dataset/inria/Train/pos', 
-                                                                lab_dir='./dataset/inria/Train/pos/'+str(label_folder_name), 
+        train_loader_second = torch.utils.data.DataLoader(InriaDataset(img_dir='./dataset',
+                                                                lab_dir='./dataset/labels',
                                                                 max_lab=20,
                                                                 imgsize=ds_image_size_second,
                                                                 shuffle=True),
