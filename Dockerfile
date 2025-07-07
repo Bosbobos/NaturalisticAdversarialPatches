@@ -1,5 +1,5 @@
 # Use an official PyTorch image as a parent image, compatible with CUDA for GPU support
-FROM pytorch/pytorch:1.8.1-cuda11.1-cudnn8-runtime
+FROM mirror.gcr.io/pytorch/pytorch:1.8.1-cuda11.1-cudnn8-runtime
 
 # Set the working directory in the container
 WORKDIR /usr/src/app

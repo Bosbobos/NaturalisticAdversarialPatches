@@ -440,9 +440,9 @@ def train_rowPtach(method_num, generator
                 # print("bbox : "+str(bbox))
                 for box in bbox:
                     # print("box size : "+str(box.size()))
-                    cls_id = box[6].int()
+                    cls_id = box.boxes.cls.int()
                     cls_name = class_names[cls_id]
-                    cls_conf = box[5]
+                    cls_conf = box.boxes.conf
                     if(cls_id == cls_id_attacked):
                         if(model_name == "yolov2"):
                             x_center    = box[0]
@@ -461,10 +461,10 @@ def train_rowPtach(method_num, generator
                         # elif model_name in ("yolov8", "yolov5"):
                         elif ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
                             left, top, right, bottom = (
-                                int(box.xyxy[0][0].cpu().item()),
-                                int(box.xyxy[0][1].cpu().item()),
-                                int(box.xyxy[0][2].cpu().item()),
-                                int(box.xyxy[0][3].cpu().item()),
+                                int(box.boxes.xyxy[0][0].cpu().item()),
+                                int(box.boxes.xyxy[0][1].cpu().item()),
+                                int(box.boxes.xyxy[0][2].cpu().item()),
+                                int(box.boxes.xyxy[0][3].cpu().item()),
                             )
                         else:
                             raise Exception("Model not implemented")
