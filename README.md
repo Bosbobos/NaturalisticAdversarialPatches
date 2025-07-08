@@ -1,8 +1,42 @@
 # Evaluating the Impact of Adversarial Patch Attacks on YOLO Models
 
-![PyTorch](https://img.shields.io/badge/PyTorch-1.8.1-red?style=flat-square&logo=pytorch)
-![CUDA](https://img.shields.io/badge/CUDA-11.1-green?style=flat-square&logo=nvidia)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)
+
+Данный репозиторий содержит слегка доработанный код из следующего репозитория: https://github.com/Bimo99B9/NaturalisticAdversarialPatches.
+
+Далее представлено руководство, как получилось запустить данную программу у меня. При этом использовались Windows 11, RTX4060Ti с CUDA 12.8, Python 3.11.
+
+Ниже так же представлено оригинальное описание от авторов репозитория, которое говорит о том, как запустить данный код в docker. Можно попробовать согласно данному руководству развернуть как данную версию репозитория, так и оригинальную.
+
+
+## Шаги для запуска
+
+1. Установить python 3.11.
+2. Создать и активировать venv
+``` bash
+python3 -m venv env
+env\Scripts\activate.bat
+```
+3. Установить зависимости
+```bash
+pip install -r requirements.txt
+```
+4. Скачать датасет по [ссылке](https://drive.google.com/file/d/1qoxqzSZ6yN6JVE8AW_owMPgMU36YHC30/view?usp=drive_link) и распаковать его в корень проекта. При желании можно заменить датасет на собственный, в качестве примера разметки взяв датасет по ссылке.
+5. Запустить программу
+```bash
+python ensemble.py --model yolov8s --classBiggan 259 --epochs 100 --weight_loss_tv 0.1 --learning_rate 0.01
+```
+- model - указывает, какую модель мы атакуем, ниже расписано, какие модели принимает программа. Интересно, что программа берет модель с таким названием из корня проекта, то есть можно туда положить свою предобученную на конкретном датасете модель. При этом архитектура модели должна быть как у модели из названия.
+- classBiggan - как будет выглядеть готовый патч (по крайней мере в теории). Ниже, опять же, можно найти, чему соответствуют значения классов. Эксперимент показал, что иногда готовый патч перестаёт выглядеть так, поэтому не совсем важно, что мы здесь выберем
+- epochs - количество эпох генерации патча. Рекомендуемое авторами программы значение - 1000, но и на 100 итерациях удалось достичь крайне эффективного патча
+- weight_loss_tv и learning_rate - типичные гиперпараметры обучения, в случае чего можно заняться их подбором, и что они значат так же описано ниже
+
+Сгенерированные патчи будут храниться в папке exp/exp[номер итерации]/generated, там же каждые N эпох сохраняются примеры использования патча (N настраивается в файле ensemble.py, параметр называется epoch_save)
+
+### Пример эффективности патча после 100 итераций
+![patched-images-0100.png](patched-images-0100.png)
+
+## Оригинальный readme
 
 This repository contains the official implementation for the paper: **"Evaluating the Impact of Adversarial Patch Attacks on YOLO Models and the Implications for Edge AI Security"**, published in the *International Journal of Information Security*.
 
