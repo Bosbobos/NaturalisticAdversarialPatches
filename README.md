@@ -4,7 +4,7 @@
 
 Данный репозиторий содержит слегка доработанный код из следующего репозитория: https://github.com/Bimo99B9/NaturalisticAdversarialPatches.
 
-Далее представлено руководство, как получилось запустить данную программу у меня. При этом использовались Windows 11, RTX4060Ti с CUDA 12.8, Python 3.11.
+Далее представлено руководство, как получилось запустить данную программу у меня. При этом использовались Windows 11, RTX4060Ti с CUDA 12.8, Python 3.11, Powershell 7
 
 Ниже так же представлено оригинальное описание от авторов репозитория, которое говорит о том, как запустить данный код в docker. Можно попробовать согласно данному руководству развернуть как данную версию репозитория, так и оригинальную.
 
@@ -14,15 +14,23 @@
 1. Установить python 3.11.
 2. Создать и активировать venv
 ``` bash
-python3 -m venv env
-env\Scripts\activate.bat
+python -m venv env
+.\env\Scripts\activate.ps1
 ```
-3. Установить зависимости
+3. Установить pytorch
 ```bash
-pip install -r requirements.txt
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 
 ```
-4. Скачать датасет по [ссылке](https://drive.google.com/file/d/1qoxqzSZ6yN6JVE8AW_owMPgMU36YHC30/view?usp=drive_link) и распаковать его в корень проекта. При желании можно заменить датасет на собственный, в качестве примера разметки взяв датасет по ссылке.
-5. Запустить программу
+4. Установить зависимости
+```bash
+pip install -r .\requirements.txt
+```
+5. Скачать датасет по [ссылке](https://drive.google.com/file/d/1qoxqzSZ6yN6JVE8AW_owMPgMU36YHC30/view?usp=drive_link) и распаковать его в корень проекта. При желании можно заменить датасет на собственный, в качестве примера разметки взяв датасет по ссылке.
+6. Скачать веса GAN-модели скриптом:
+```bash
+bash .\GANLatentDiscovery\download_weights.sh
+```
+7. Запустить программу
 ```bash
 python ensemble.py --model yolov8s --classBiggan 259 --epochs 100 --weight_loss_tv 0.1 --learning_rate 0.01
 ```

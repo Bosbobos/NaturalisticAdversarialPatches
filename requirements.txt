@@ -1,8 +1,8 @@
 numpy~=1.26.4
 ipdb~=0.13.13
 opencv-python~=4.11.0.86
-torch~=2.7.1+cu128
-torchvision~=0.22.1+cu128
+#torch~=2.7.1+cu128
+#torchvision~=0.22.1+cu128
 matplotlib~=3.10.3
 Pillow~=10.1.0
 tqdm~=4.67.1
