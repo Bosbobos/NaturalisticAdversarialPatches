@@ -4,8 +4,6 @@ import torch
 import numpy as np
 import cv2
 
-# <<< всё что выше уже есть у вас: preprocess, postprocess, nms и пр. >>>
-
 def _tensor_to_cv(img_t):
     """TorchCHW[0‑1]RGB→uint8HWCBGR (для cv2)."""
     img = img_t.detach().cpu().permute(1, 2, 0).numpy()           # -> HWC RGB
@@ -116,6 +114,13 @@ def postprocess(pred, orig_sz, in_sz, strides, conf_thr, num_classes):
     # 7) NMS
     keep = nms(boxes, scores)
     return boxes[keep], scores[keep], class_ids[keep]
+
+class BBox:
+    def __init__(self, cls, conf, xyxy):
+        self.cls = cls
+        self.conf = conf
+        self.xyxy = xyxy
+
 
 @torch.no_grad()
 def nanodet_detect(model,

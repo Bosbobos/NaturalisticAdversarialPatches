@@ -466,9 +466,13 @@ def train_rowPtach(method_num, generator
                 # print("bbox : "+str(bbox))
                 for box in bbox:
                     # print("box size : "+str(box.size()))
-                    cls_id = box.boxes.cls.int()
+                    if model_name == 'nanodet':
+                        cls_id = box[2]
+                        cls_conf = box[1]
+                    else:
+                        cls_id = box.boxes.cls.int()
+                        cls_conf = box.boxes.conf
                     cls_name = class_names[cls_id]
-                    cls_conf = box.boxes.conf
                     if(cls_id == cls_id_attacked):
                         if(model_name == "yolov2"):
                             x_center    = box[0]
@@ -494,10 +498,10 @@ def train_rowPtach(method_num, generator
                             )
                         elif (model_name == 'nanodet'): # TODO: если с границами че-то не так, то менять стоит здесь
                             left, top, right, bottom = (
-                                int(box.boxes.xyxy[0][0].cpu().item()),
-                                int(box.boxes.xyxy[0][1].cpu().item()),
-                                int(box.boxes.xyxy[0][2].cpu().item()),
-                                int(box.boxes.xyxy[0][3].cpu().item()),
+                                int(box[0][0]),
+                                int(box[0][1]),
+                                int(box[0][2]),
+                                int(box[0][3]),
                             )
                         else:
                             raise Exception("Model not implemented")
