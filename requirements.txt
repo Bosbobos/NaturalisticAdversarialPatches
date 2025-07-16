@@ -23,3 +23,6 @@ ImageAug~=0.1.0.post0
 pandas~=2.3.0
 ipython~=9.3.0
 comm~=0.2.2
+
+onnx~=1.18.0
+onnx2torch~=1.5.15

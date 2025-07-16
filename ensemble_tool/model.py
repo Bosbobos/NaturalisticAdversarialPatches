@@ -18,6 +18,8 @@ from ipdb import set_trace as st
 
 from pytorch_pretrained_detection import FasterrcnnResnet50
 
+from nanodet_module import nanodet_detect
+
 
 class TotalVariation(nn.Module):
     """TotalVariation: calculates the total variation of a patch.
@@ -113,7 +115,7 @@ def eval_rowPtach(generator, batch_size, device
         # plt.show()
         # sys.exit()
 
-        # loss.
+        # loss. TODO: посмотреть, нужно ли это вообще
         if(model_name == "yolov4"):
             max_prob_obj_cls, overlap_score, bboxes = detector.detect(input_imgs=p_img_batch, cls_id_attacked=cls_id_attacked, clear_imgs=input_imgs, with_bbox=enable_with_bbox)
             # loss_det
@@ -161,7 +163,20 @@ def eval_rowPtach(generator, batch_size, device
                     loss_det = torch.mean(torch.stack(combined_probs))
             else:
                 loss_det = torch.tensor(0.0).to(device)
-                
+
+        elif (model_name == "nanodet"):
+            max_prob_obj_cls, overlap_score, bboxes = nanodet_detect(
+                model=detector,  # ← onnx2torch‑модель
+                input_imgs=p_img_batch,
+                cls_id_attacked=cls_id_attacked,
+                clear_imgs=input_imgs,
+                conf_thr=0, # TODO: чекнуть, возможно стоит изменить
+                with_bbox=enable_with_bbox,
+                device=device
+            )
+            loss_det = torch.mean(max_prob_obj_cls)
+            loss_overlap = -torch.mean(overlap_score)
+
             # print(f"obtained loss_det: {loss_det}")
         else:
             raise Exception("Model not implemented")
@@ -404,7 +419,18 @@ def train_rowPtach(method_num, generator
                 loss_overlap = torch.tensor(0.0).to(device)
                 
                 # print(f"obtained loss_det: {loss_det}")
-                
+            elif (model_name == "nanodet"):
+                max_prob_obj_cls, overlap_score, bboxes = nanodet_detect(
+                    model=detector,  # ← onnx2torch‑модель
+                    input_imgs=p_img_batch,
+                    cls_id_attacked=cls_id_attacked,
+                    clear_imgs=input_imgs,
+                    conf_thr=0, # TODO: чекнуть, возможно стоит изменить
+                    with_bbox=enable_with_bbox,
+                    device=device
+                )
+                loss_det = torch.mean(max_prob_obj_cls)
+                loss_overlap = -torch.mean(overlap_score)
             else:
                 raise Exception("Model not implemented")
 
@@ -460,6 +486,13 @@ def train_rowPtach(method_num, generator
                             bottom      = int(box[3] * img_height)
                         # elif model_name in ("yolov8", "yolov5"):
                         elif ("yolov5" in model_name or "yolov8" in model_name or "yolov9" in model_name or "yolov10" in model_name):
+                            left, top, right, bottom = (
+                                int(box.boxes.xyxy[0][0].cpu().item()),
+                                int(box.boxes.xyxy[0][1].cpu().item()),
+                                int(box.boxes.xyxy[0][2].cpu().item()),
+                                int(box.boxes.xyxy[0][3].cpu().item()),
+                            )
+                        elif (model_name == 'nanodet'): # TODO: если с границами че-то не так, то менять стоит здесь
                             left, top, right, bottom = (
                                 int(box.boxes.xyxy[0][0].cpu().item()),
                                 int(box.boxes.xyxy[0][1].cpu().item()),

@@ -35,6 +35,10 @@ from ipdb import set_trace as st
 import argparse
 import sys
 
+import onnx
+import onnxruntime as ort
+import onnx2torch
+
 """
 version: 2021.2.19.1200
 
@@ -93,7 +97,7 @@ def main():
 
     start_epoch           = 1         # from what epoch to start training
     learning_rate         = apt.learning_rate      # training learning rate. (hint v3~v4(~0.02) v2(~0.01))
-    epoch_save            = 100       # from how many A to save a checkpoint
+    epoch_save            = 1       # from how many A to save a checkpoint
     cls_id_attacked       = 0         # the class attacked. (0: person). List: https://gist.github.com/AruniRC/7b3dadd004da04c80198557db5da4bda
     cls_id_generation     = apt.classBiggan       # the class generated at patch. (259: pomeranian) List: https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a
     alpha_latent          = 1.0       # weight latent space. z = (alpha_latent * z) + ((1-alpha_latent) * rand_z); std:0.99
@@ -280,6 +284,16 @@ def main():
         detector = FasterrcnnResnet50()
     if(model_name == "maskrcnn"):
         detector = MaskrcnnResnet50()
+    if(model_name == "nanodet"):
+        batch_size_second = 8
+        onnx_model = onnx.load('nanodet.onnx')
+        onnx_runtime = ort.InferenceSession('nanodet.onnx')
+        detector = onnx2torch.convert(onnx_model)
+        detector.input_size = onnx_runtime.get_inputs()[0].shape[1:]
+        detector.output_size = onnx_runtime.get_outputs()[0].shape[1:]
+        num_offsets = 32
+        detector.num_classes = detector.output_size[1] - num_offsets
+
     finish = time.time()
     print('Load detector in %f seconds.' % (finish - start))
 
