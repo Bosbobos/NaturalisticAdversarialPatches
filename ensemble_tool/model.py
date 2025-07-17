@@ -425,7 +425,7 @@ def train_rowPtach(method_num, generator
                     input_imgs=p_img_batch,
                     cls_id_attacked=cls_id_attacked,
                     clear_imgs=input_imgs,
-                    conf_thr=0, # TODO: чекнуть, возможно стоит изменить
+                    conf_thr=0.2, # TODO: чекнуть, возможно стоит изменить
                     with_bbox=enable_with_bbox,
                     device=device
                 )
